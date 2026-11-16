@@ -4,7 +4,6 @@ import (
 	"os"
 	"runtime"
 	"strings"
-	"unicode/utf8"
 )
 
 // ANSI SGR codes from the 16-colour palette, so the user's terminal theme applies.
@@ -61,15 +60,25 @@ func streamPolicy(tty bool, term string, noColorEnv, noColorFlag bool) terminal 
 
 // fit truncates plain text to at most width display cells (one cell per rune).
 // A width of zero or less disables truncation.
+// fit shortens text to width terminal columns, marking the cut with "~".
 func fit(text string, width int) string {
-	if width <= 0 || utf8.RuneCountInString(text) <= width {
+	if width <= 0 || cells(text) <= width {
 		return text
 	}
-	runes := []rune(text)
-	if width == 1 {
-		return string(runes[:1])
+	var b strings.Builder
+	used := 0
+	for _, r := range text {
+		w := runeWidth(r)
+		if used+w > width-1 {
+			break
+		}
+		b.WriteRune(r)
+		used += w
 	}
-	return string(runes[:width-1]) + "~"
+	if width == 1 {
+		return b.String()
+	}
+	return b.String() + "~"
 }
 
 // clip is fit for a known terminal width: no room left means no text.
@@ -80,7 +89,14 @@ func clip(text string, width int) string {
 	return fit(text, width)
 }
 
-func cells(text string) int { return utf8.RuneCountInString(text) }
+// cells is the number of terminal columns text takes.
+func cells(text string) int {
+	n := 0
+	for _, r := range text {
+		n += runeWidth(r)
+	}
+	return n
+}
 
 func pad(text string, width int) string {
 	if n := cells(text); n < width {

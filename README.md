@@ -9,10 +9,9 @@
 ConMesh also manages agents and skills and can expose its index over MCP to Claude Code, Codex, and other compatible hosts.
 
 ConMesh ships a catalog of skill and agent packs, grouped by category, that install with one
-command and use ConMesh's code index: [Caveman](https://github.com/juliusbrussee/caveman)
+command and use ConMesh's code index. Start with the recommended **ConMesh code-aware** pack, then add [Caveman](https://github.com/juliusbrussee/caveman)
 for token saving, [Matt Pocock's skills](https://github.com/mattpocock/skills) for
-engineering workflow, [ECC](https://github.com/affaan-m/ecc) reviewers and planners, and
-ConMesh's own code-aware skills. See [Skill and agent packs](#skill-and-agent-packs).
+engineering workflow, and [ECC](https://github.com/affaan-m/ecc) reviewers and planners. See [Skill and agent packs](#skill-and-agent-packs).
 
 ## Fast install with your coding agent
 
@@ -246,8 +245,8 @@ ConMesh, so installing one needs no network access.
 
 | Category | Pack | What you get | Install |
 |---|---|---|---|
+| Code-aware (recommended) | `conmesh-code-aware` | `code-search` and `change-impact` skills that answer from the ConMesh index, plus the repository research agent. Start here: it is what makes every other skill and agent work from your code index. | `conmesh pack add conmesh-code-aware --trust` |
 | Token saving | `caveman` | Terse output modes (`/conmesh-caveman`, `/conmesh-ultracave`), compressed commit and review messages, small task workflows, and three subagents that return `path:line` tables instead of prose. 12 skills, 3 agents. | `conmesh pack add caveman --trust` |
-| Code-aware | `conmesh-code-aware` | `code-search` and `change-impact` skills that answer from the ConMesh index, plus the repository research agent. | `conmesh pack add conmesh-code-aware --trust` |
 | Engineering workflow | `mattpocock-skills` | Grilling sessions, specs and tickets, TDD, bug diagnosis, code review and codebase design. 27 skills. | `conmesh pack add mattpocock-skills --trust` |
 | Code review and security | `ecc-review` | Code, security, silent-failure, database and performance reviewers, plus dead-code cleanup. 6 agents. | `conmesh pack add ecc-review --trust` |
 | Planning and architecture | `ecc-planning` | Planner, architect, code explorer and doc updater. 4 agents. | `conmesh pack add ecc-planning --trust` |

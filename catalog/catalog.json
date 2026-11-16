@@ -2,6 +2,25 @@
   "schema_version": 1,
   "categories": [
     {
+      "id": "code-aware",
+      "title": "Code-aware (ConMesh index)",
+      "packs": [
+        {
+          "id": "conmesh-code-aware",
+          "title": "ConMesh code-aware",
+          "recommended": true,
+          "description": "Find code, check the impact of a change and research the repository through the project's ConMesh index instead of broad file reads.",
+          "author": "ConMesh",
+          "license": "Apache-2.0",
+          "members": [
+            {"id": "code-search", "type": "skill"},
+            {"id": "change-impact", "type": "skill"},
+            {"id": "repository-research", "type": "agent"}
+          ]
+        }
+      ]
+    },
+    {
       "id": "token-saving",
       "title": "Token saving",
       "packs": [
@@ -32,24 +51,6 @@
             {"id": "cavecrew-investigator", "type": "agent", "path": "agents/cavecrew-investigator.md"},
             {"id": "cavecrew-builder", "type": "agent", "path": "agents/cavecrew-builder.md"},
             {"id": "cavecrew-reviewer", "type": "agent", "path": "agents/cavecrew-reviewer.md"}
-          ]
-        }
-      ]
-    },
-    {
-      "id": "code-aware",
-      "title": "Code-aware (ConMesh index)",
-      "packs": [
-        {
-          "id": "conmesh-code-aware",
-          "title": "ConMesh code-aware",
-          "description": "Find code, check the impact of a change and research the repository through the project's ConMesh index instead of broad file reads.",
-          "author": "ConMesh",
-          "license": "Apache-2.0",
-          "members": [
-            {"id": "code-search", "type": "skill"},
-            {"id": "change-impact", "type": "skill"},
-            {"id": "repository-research", "type": "agent"}
           ]
         }
       ]

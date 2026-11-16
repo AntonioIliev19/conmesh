@@ -11,16 +11,18 @@ import (
 // Pack is a group of predefined packages that work together, such as one
 // upstream author's skills. Packs belong to a category for display.
 type Pack struct {
-	ID            string         `json:"id"`
-	Title         string         `json:"title"`
-	Description   string         `json:"description"`
-	Author        string         `json:"author"`
-	URL           string         `json:"url,omitempty"`
-	License       string         `json:"license"`
-	Category      string         `json:"category"`
-	CategoryTitle string         `json:"category_title"`
-	ThirdParty    bool           `json:"third_party"`
-	Members       []CatalogEntry `json:"members"`
+	ID            string `json:"id"`
+	Title         string `json:"title"`
+	Description   string `json:"description"`
+	Author        string `json:"author"`
+	URL           string `json:"url,omitempty"`
+	License       string `json:"license"`
+	Category      string `json:"category"`
+	CategoryTitle string `json:"category_title"`
+	ThirdParty    bool   `json:"third_party"`
+	// Recommended packs are listed first and marked as recommended.
+	Recommended bool           `json:"recommended,omitempty"`
+	Members     []CatalogEntry `json:"members"`
 }
 
 // Packs lists the catalog's packs in catalog order, each with its members.
@@ -42,6 +44,7 @@ func Packs() ([]Pack, error) {
 				Author      string `json:"author"`
 				URL         string `json:"url"`
 				License     string `json:"license"`
+				Recommended bool   `json:"recommended"`
 				Members     []struct {
 					ID   string `json:"id"`
 					Type string `json:"type"`
@@ -70,7 +73,7 @@ func Packs() ([]Pack, error) {
 			}
 			packIDs[p.ID] = true
 			pack := Pack{ID: p.ID, Title: displayText(p.Title, 64), Description: displayText(p.Description, 200), Author: displayText(p.Author, 64),
-				URL: p.URL, License: displayText(p.License, 64), Category: c.ID, CategoryTitle: displayText(c.Title, 64), ThirdParty: p.URL != ""}
+				URL: p.URL, License: displayText(p.License, 64), Category: c.ID, CategoryTitle: displayText(c.Title, 64), ThirdParty: p.URL != "", Recommended: p.Recommended}
 			for _, m := range p.Members {
 				e, ok := byID[m.ID]
 				if !ok || e.Type != m.Type || seen[m.ID] {

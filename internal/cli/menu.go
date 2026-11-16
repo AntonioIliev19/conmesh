@@ -488,66 +488,87 @@ func menuInstall(out io.Writer, prompt func(string) string, pick func(string, []
 	}
 	options := make([]menuOption, 0, len(mp.packs)+2)
 	for _, p := range mp.packs {
-		options = append(options, menuOption{group: p.CategoryTitle, name: p.Title, description: packCounts(p) + "  " + p.Description,
+		name := p.Title
+		if p.Recommended {
+			name += " (recommended)"
+		}
+		options = append(options, menuOption{group: p.CategoryTitle, name: name, description: packCounts(p) + "  " + p.Description,
 			sameAs: []string{"conmesh pack add " + p.ID + " --trust"}})
 	}
 	options = append(options,
 		menuOption{group: "Other", name: "Folder or web URL", description: "Local package directory or HTTPS Git URL",
 			sameAs: []string{"conmesh skill add <source> --trust", "conmesh agent add <source> --trust"}})
-	choice := pick("Choose what to install", options)
-	if choice < 0 {
-		return
+	// Back (Esc or Backspace) returns one screen at a time: from the review to
+	// the pack's skills and agents, from there to the pack list, then to the
+	// main menu. After quit, every pick returns -1, so the loops end too.
+	for {
+		choice := pick("Choose what to install", options)
+		if choice < 0 {
+			return
+		}
+		if choice == len(mp.packs) {
+			menuPackage(out, prompt, pick, confirm, run, "add")
+			return
+		}
+		if menuInstallPack(out, pick, confirm, run, mp, mp.packs[choice]) {
+			return
+		}
 	}
-	if choice == len(mp.packs) {
-		menuPackage(out, prompt, pick, confirm, run, "add")
-		return
-	}
-	p := mp.packs[choice]
+}
+
+// menuInstallPack shows one pack's skills and agents and installs the whole
+// pack or one item. It reports false when the user went back to the pack list.
+func menuInstallPack(out io.Writer, pick func(string, []menuOption) int, confirm func(string) bool, run func([]string), mp menuPackages, p packages.Pack) bool {
 	items := []menuOption{{group: p.Title, subtitle: packOrigin(p), name: "Whole pack", description: packCounts(p),
 		sameAs: []string{"conmesh pack add " + p.ID + " --trust"}}}
 	for _, e := range p.Members {
 		items = append(items, menuOption{group: "Or just one", name: e.Title, description: e.Type + "  " + e.Description,
 			sameAs: []string{"conmesh " + e.Type + " add " + e.Source + " --trust"}})
 	}
-	choice = pick("Install the whole pack or one item?", items)
-	if choice < 0 {
-		return
-	}
-	args := []string{"pack", "add", p.ID}
-	ids := make([]string, 0, len(p.Members))
-	for _, e := range p.Members {
-		ids = append(ids, e.ID)
-	}
-	if choice > 0 {
-		e := p.Members[choice-1]
-		args = []string{e.Type, "add", e.Source}
-		ids = []string{e.ID}
-	}
-	scopes := scopeOptions(mp.project)
-	selected := pick("Install for which projects?", scopes)
-	if selected < 0 {
-		return
-	}
-	scope := scopes[selected].id
-	entries, err := packages.WithRequires(ids)
-	if err != nil {
-		fmt.Fprintln(out, "  "+err.Error())
-		return
-	}
-	names := make([]string, 0, len(entries))
-	for _, e := range entries {
-		names = append(names, e.ID)
-	}
-	fmt.Fprintf(out, "  Installs %s for %s: %s\n", plural(len(entries), "package"), scopeLabel(scope), clip(strings.Join(names, ", "), 400))
-	if len(entries) > len(ids) {
-		fmt.Fprintln(out, "  Includes the predefined packages these call by name.")
-	}
-	if p.ThirdParty {
-		fmt.Fprintf(out, "  %s is third-party content by %s (%s). Its authors are responsible for it, not ConMesh.\n", p.Title, p.Author, p.License)
-	}
-	fmt.Fprintln(out, "  Review the instructions in the package store, then publish them with conmesh sync.")
-	if confirm("Install now?") {
+	for {
+		choice := pick("Install the whole pack or one item?", items)
+		if choice < 0 {
+			return false
+		}
+		args := []string{"pack", "add", p.ID}
+		ids := make([]string, 0, len(p.Members))
+		for _, e := range p.Members {
+			ids = append(ids, e.ID)
+		}
+		if choice > 0 {
+			e := p.Members[choice-1]
+			args = []string{e.Type, "add", e.Source}
+			ids = []string{e.ID}
+		}
+		scopes := scopeOptions(mp.project)
+		selected := pick("Install for which projects?", scopes)
+		if selected < 0 {
+			continue
+		}
+		scope := scopes[selected].id
+		entries, err := packages.WithRequires(ids)
+		if err != nil {
+			fmt.Fprintln(out, "  "+err.Error())
+			return true
+		}
+		names := make([]string, 0, len(entries))
+		for _, e := range entries {
+			names = append(names, e.ID)
+		}
+		fmt.Fprintf(out, "  Installs %s for %s: %s\n", plural(len(entries), "package"), scopeLabel(scope), clip(strings.Join(names, ", "), 400))
+		if len(entries) > len(ids) {
+			fmt.Fprintln(out, "  Includes the predefined packages these call by name.")
+		}
+		if p.ThirdParty {
+			fmt.Fprintf(out, "  %s is third-party content by %s (%s). Its authors are responsible for it, not ConMesh.\n", p.Title, p.Author, p.License)
+		}
+		fmt.Fprintln(out, "  Review the instructions in the package store, then publish them with conmesh sync.")
+		if !confirm("Install now?") {
+			fmt.Fprintln(out)
+			continue
+		}
 		run(append(args, "--"+scope, "--trust"))
+		return true
 	}
 }
 

@@ -158,7 +158,11 @@ func packListing(packs []packages.Pack) string {
 			category = p.CategoryTitle
 			fmt.Fprintln(&b, category)
 		}
-		fmt.Fprintf(&b, "  %-24s %s (%s; %s)\n", p.ID, p.Title, packCounts(p), packOrigin(p))
+		mark := ""
+		if p.Recommended {
+			mark = "  [recommended]"
+		}
+		fmt.Fprintf(&b, "  %-24s %s (%s; %s)%s\n", p.ID, p.Title, packCounts(p), packOrigin(p), mark)
 		fmt.Fprintf(&b, "  %-24s %s\n", "", p.Description)
 	}
 	b.WriteString("\nInstall a pack:  conmesh pack add <pack> --trust\n")
