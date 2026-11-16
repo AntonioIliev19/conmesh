@@ -23,6 +23,8 @@ CLI-only installation skips questions 2 to 4 and ends after verification.
 
 ## Configure the approved repositories
 
+The [project setup guide](SETUP.md) explains each command below, its options and what it writes. Read it before configuring a repository, and use it to answer the user's questions.
+
 1. Show the proposed commands and get confirmation before creating `.conmesh/config.yaml` or changing an existing configuration. Initialize with `conmesh init` for indexing off, or `conmesh init --index` when explicitly approved. Add `--harness` with the user's tools that ConMesh integrates directly, comma-separated: `claude`, `codex`, `cursor`, `copilot` (for example `--harness claude,cursor`). Existing settings are preserved by init; to add tools later, show and confirm the edit to the `harnesses` array in `.conmesh/config.yaml`. If indexing is off in an existing config and the user opts in, show and confirm the targeted settings edit. Follow the [migration instructions](MIGRATION.md) if legacy state is detected.
 2. Before indexing, point out that ConMesh applies its built-in exclusions, `.gitignore`, and `.conmeshignore`. Run `conmesh index` only in the confirmed roots with indexing enabled. Model downloads, semantic indexing, and research runs each require a separate user request.
 3. Install the packs the user chose with `conmesh pack add <pack> --trust` plus `--project` or `--global` as they answered. Always pass one of the two: without it the command asks interactively in a terminal and defaults to the project otherwise. `conmesh pack show <pack>` lists what a pack contains.

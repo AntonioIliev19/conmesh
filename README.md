@@ -30,42 +30,42 @@ The [installation steering guide](INSTALL.md) also works as a manual checklist.
 
 ## Install ConMesh
 
-Download the Windows x64 ZIP from [GitHub Releases](https://github.com/AntonioIliev19/conmesh/releases/latest), extract it, and run `install.cmd`. Open a new terminal and run `conmesh --version`. The installer uses your user account and adds ConMesh to your user PATH.
+### Windows (recommended)
 
-For a source build or a trusted executable you already have, use the steps below.
-
-In your own PowerShell window, from this repository with `conmesh.exe` in its root:
-
-```powershell
-Test-Path .\conmesh.exe
-.\scripts\install.cmd .\conmesh.exe
-```
-
-The installer copies the binary into your per-user ConMesh directory and adds that
-directory to your user PATH. If you run the installer from another directory,
-replace `C:\path\to\ConMesh` with the full path to your ConMesh checkout.
-
-```powershell
-& 'C:\path\to\ConMesh\scripts\install.cmd' 'C:\path\to\ConMesh\conmesh.exe'
-```
-
-Close and reopen the terminal application, including a parent editor such as VS
-Code if it launches your terminals. Then verify from any directory:
+- Download the Windows x64 ZIP from [GitHub Releases](https://github.com/AntonioIliev19/conmesh/releases/latest).
+- Extract it and run `install.cmd`. It installs for your user account and adds
+  ConMesh to your user PATH.
+- Open a new terminal and check it works:
 
 ```powershell
 conmesh --version
-conmesh --help
 ```
 
-Run `conmesh` or `conmesh menu` in a terminal. The menu shows the current workspace
-and version, then groups its items under **Packages** (Install, Update, List,
-Uninstall; see [Third-party agents and skills](#third-party-agents-and-skills)), **Project** (Workspace, Doctor) and **ConMesh** (Help, Self-update,
-Quit). **Install** lists the catalog's packs by category. Pick a pack, then install
-all of it or a single skill or agent from it, and choose whether it is for this project
-or all your projects. **Install** also accepts any local package folder or HTTPS Git URL. **List** shows installed agents and skills under
-their own headings. **Update** updates an installed agent or skill; **Self-update**
-checks for and installs a verified ConMesh release. The "same as" line under the menu shows
-the equivalent command for the highlighted item.
+### From a checkout or your own build
+
+Run the installer with the path to a trusted `conmesh.exe`:
+
+```powershell
+# From the ConMesh checkout, with conmesh.exe in its root
+.\scripts\install.cmd .\conmesh.exe
+
+# Or from any folder, with full paths
+& 'C:\path\to\ConMesh\scripts\install.cmd' 'C:\path\to\ConMesh\conmesh.exe'
+```
+
+Then close and reopen your terminal (and an editor such as VS Code if it starts
+your terminals) and run `conmesh --version`. To build the executable, see
+[Build from source](#build-from-source).
+
+### Use the menu
+
+Run `conmesh` (or `conmesh menu`) in a terminal.
+
+- **Packages:** Install (packs by category, a single skill or agent, or a local
+  folder or HTTPS Git URL), Update, List, Uninstall.
+- **Project:** Workspace, Doctor.
+- **ConMesh:** Help, Self-update (installs a verified release), Quit.
+- **"same as" line:** shows the equivalent command for the highlighted item.
 
 | Key | Action |
 |---|---|
@@ -75,26 +75,18 @@ the equivalent command for the highlighted item.
 | `q` | Quit the menu |
 | Ctrl-C | Exit immediately |
 
-Opening the menu makes no network request unless `CONMESH_AUTO_UPDATE_CHECK=1`
-is set, in which case it checks for a release in the background at most once a
-day. When stdin is not a terminal (for
-example `echo x | conmesh`), or with `--no-input`, `conmesh` prints the command
-reference instead of opening the menu.
+### Scripting
 
-Scripting options:
+- **No prompts:** `--no-input` never asks; without a terminal, `conmesh` prints
+  the command reference instead of the menu.
+- **JSON output:** `--json` for `doctor`, `agent list` and `skill list`;
+  `status` always prints JSON.
+- **No colour:** `--no-color`, `NO_COLOR` or `TERM=dumb`.
+- **No network on open:** the menu checks for releases only with
+  `CONMESH_AUTO_UPDATE_CHECK=1`, at most once a day.
+- **Typos:** a mistyped command such as `conmesh serch` suggests the closest one.
 
-- `--json` gives machine-readable output for `doctor`, `agent list` and
-  `skill list`. `status` always prints JSON and also accepts `--json`.
-- `--no-input` never prompts. `conmesh --no-input menu` fails and names the flag;
-  a mistyped command only prints its suggestion.
-- Colour is off when `NO_COLOR` is set, `TERM=dumb`, `--no-color` is passed, or the
-  output is not a terminal. Each of stdout and stderr is checked separately.
-- A mistyped command such as `conmesh serch` suggests the closest real command. In
-  a terminal it asks `[y/N]` (default No); otherwise it only prints the suggestion
-  and exits with status 2.
-
-If command
-discovery fails, check that the installed file exists and run it directly:
+### If `conmesh` is not found
 
 ```powershell
 $conmeshExe = Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) 'ConMesh\bin\conmesh.exe'
@@ -103,98 +95,53 @@ Test-Path $conmeshExe
 Get-Command conmesh -All
 ```
 
-If `Test-Path` returns `False`, install a trusted binary first. Restarting parent
-applications refreshes inherited PATH; it cannot fix a missing executable.
+If `Test-Path` returns `False`, install ConMesh first. Otherwise restart the
+terminal and any editor that started it, so they pick up the new PATH.
 
 ## Setup for your project
 
-Follow these steps to build a local index and run the Research Agent in your
-existing project chat. The examples use PowerShell.
+Three steps connect ConMesh to a project. Steps 4 to 6 turn your codebase into
+reviewed guidance that every AI session loads. The [project setup guide](SETUP.md)
+explains every option; coding agents setting up ConMesh follow it.
 
-### 1. Open your project and initialize ConMesh
-
-Replace the example path with the root of your own project.
+### 1. Initialize ConMesh
 
 ```powershell
 Set-Location 'C:\path\to\your-project'
 conmesh init --harness codex --index
-conmesh status
 ```
 
-`init` creates `.conmesh/config.yaml`. `--harness codex` selects Codex and `--index`
-enables indexing in the settings. Use `--harness claude` for Claude Code or
-`--harness claude,codex` for both. Add `cursor` or `copilot` to the list to also
-publish approved project knowledge as Cursor rules or GitHub Copilot
-instructions (see step 6); ConMesh does not configure MCP for those two. For
-OpenCode or another local host, use `conmesh init --index`. If you only want package management, use `conmesh init`
-and stop here. `conmesh doctor` checks available runtime features.
-
-If the project is already initialized, `init` preserves its settings. Edit
-`.conmesh/config.yaml` to set `indexing.enabled` to `true` and add `"codex"` to the
-`harnesses` array as needed. The file uses JSON syntax despite its extension.
+Creates `.conmesh/config.yaml`. `--harness` names your AI tools (`claude`,
+`codex`, `cursor`, `copilot`, comma-separated) and `--index` turns on code
+indexing. Run plain `conmesh init` if you only want package management.
 
 ### 2. Build the local index
 
 ```powershell
 conmesh index
+conmesh search "request handler" --limit 10
 ```
 
-This builds the searchable index of allowed files. Run it again after source
-changes. ConMesh reuses entries for unchanged files. To try the index, run
-`conmesh search "request handler" --limit 10` or `conmesh symbol Handler`, using a
-query or exact symbol name from your project. Search also matches the parts of
-camelCase and snake_case names, so `handler` finds `requestHandler`.
+Indexes the allowed files of your project, respecting `.gitignore` and
+`.conmeshignore`. Run `conmesh index` again after source changes; unchanged
+files are reused.
 
-A file with syntax errors, or one over the parser limits, is still indexed as
-plain text without symbols, after the same ignore and secret checks as every
-other file. The summary line reports how many, and why any file was skipped.
-
-The index format is upgraded in place the first time a newer ConMesh writes to
-it, and all files are re-extracted once. An older ConMesh cannot read the
-upgraded index. If you go back to an older version, for example with
-`conmesh update --rollback`, delete `.conmesh/state/index.sqlite` and its
-`-wal` and `-shm` files, then run `conmesh index` again.
-
-### 3. Install the skill and connect your agent tool
-
-Preview the project configuration changes.
+### 3. Connect your AI tools
 
 ```powershell
 conmesh sync --dry-run
-```
-
-Review the plan and any installed package instructions, then apply it.
-
-```powershell
 conmesh sync --trust
 ```
 
-Sync installs the shared `conmesh-research` project skill. It also connects MCP
-and installs a custom Research Agent for selected Codex and Claude Code
-integrations. For OpenCode, Cursor, or another host, set up the local ConMesh MCP
-server once in that tool. Configure it as a stdio server using the command `conmesh mcp serve` from the project root.
+Preview the changes, then apply them. For Claude Code and Codex this connects
+the ConMesh MCP server and adds the research skill and agent. For other tools,
+connect the MCP server once as described in the [setup guide](SETUP.md#3-connect-your-ai-tools).
 
-### 4. Start research in the chat you already have open
+### 4. Run research
 
-Send this message in your local project chat.
-
-```text
-Run ConMesh research
-```
-
-You can also select `conmesh-research` from your tool's skill picker when available.
-The skill asks your current agent to delegate to one local subagent. The worker
-checks the index, creates `.conmesh/knowledge/manifest.yaml` if it is missing,
-and registers and validates its proposed Markdown documents. It returns the
-results to the same chat. Your tool needs local subagent support with MCP and
-project write access. The session's model provider may receive selected source
-during research.
-
-For other skills you've installed with `conmesh skill add`, `conmesh sync --trust` exports
-the effective project and global skills to the project's `.agents/skills/`
-directory. Select the exported skill by name in Codex to use it directly. In
-Codex CLI or the IDE extension, type `$` or use `/skills`. See
-[Codex skill discovery](https://learn.chatgpt.com/docs/build-skills#how-chatgpt-and-codex-use-skills).
+Send `Run ConMesh research` in your project's AI chat. A local subagent reads the
+index and proposes Markdown guidance about your architecture and conventions
+for you to review. Your tool's model provider may receive selected source code.
 
 ### 5. Review the proposed knowledge
 
@@ -205,38 +152,21 @@ and citations look right, use the returned review digest in
 
 ### 6. Publish the knowledge to every session
 
-Run `conmesh sync --dry-run`, review the plan, then `conmesh sync --trust`. Each
-approved guidance entry is published in the format of every tool listed in
-`harnesses`, so the tool loads it for the matching code by itself:
+Run `conmesh sync --dry-run`, then `conmesh sync --trust`.
 
-| Tool | Published as |
-| --- | --- |
-| Claude Code | Skill in `.claude/skills/conmesh-kb-<id>/SKILL.md` |
-| Codex and other tools that read `.agents/skills` | Skill in `.agents/skills/conmesh-kb-<id>/SKILL.md` |
-| Cursor | Rule in `.cursor/rules/conmesh-kb-<id>.mdc`, attached for the entry's scopes |
-| GitHub Copilot | Instructions in `.github/instructions/conmesh-kb-<id>.instructions.md`, applied to the entry's scopes |
+- **Every tool, its own format:** approved guidance becomes skills for Claude
+  Code and Codex, rules for Cursor and instructions for GitHub Copilot, loaded
+  for the matching code automatically.
+- **Project agents:** approved agents from research are published for Claude
+  Code and Codex.
+- **Any session finds it:** a marked section in `CLAUDE.md` and `AGENTS.md`
+  lists the guidance, so sessions that know nothing about ConMesh use it too.
+  Commit these files to share them with your team.
+- **Your files stay yours:** ConMesh only changes its own marked section and
+  files, and publishes only current, reviewed guidance.
+- **Edit the source:** change `.conmesh/knowledge/`, approve, and sync again.
 
-Research also proposes project agents (entries with `kind: agent`), such as a
-feature developer for each major part of the code. Once approved, they are
-published as custom agents for Claude Code (`.claude/agents/conmesh-agent-<id>.md`)
-and Codex (`.codex/agents/conmesh-agent-<id>.toml`), each pointing to the
-published guidance for its part of the code. Cursor and Copilot receive the
-guidance only.
-
-Guidance and agents are also listed in a marked "Project knowledge" section of
-`CLAUDE.md` and `AGENTS.md`. Sessions that know nothing about ConMesh, with any
-model, then load the guidance on their own when they work in the matching part
-of the code. Commit these files to share them with your team.
-
-- **Your instructions stay yours:** in a `CLAUDE.md` or `AGENTS.md` you wrote,
-  ConMesh changes only the section between its `BEGIN`/`END CONMESH PROJECT
-  KNOWLEDGE` markers. It refuses to overwrite that section if someone edited it.
-- **Only current, reviewed guidance is published:** proposed entries are not
-  published. When a cited file changes, the entry is withdrawn at the next sync
-  until you review and approve it again. `sync --dry-run` lists every entry it
-  left out and why.
-- **Edit the source, not the copy:** change `.conmesh/knowledge/`, approve it,
-  and sync again. Edits to the published skill files are overwritten.
+Where each file goes and how stale guidance is handled: [setup guide, step 6](SETUP.md#6-publish-the-knowledge).
 
 ## Skill and agent packs
 
