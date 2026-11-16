@@ -1,0 +1,16 @@
+{
+  "index": {
+    "description": "Grill the user relentlessly about a plan, decision, or idea. Use when the user wants to stress-test their thinking, or uses any 'grill' trigger phrases.",
+    "title": "Grilling",
+    "type": "skill"
+  },
+  "pack": "mattpocock-skills",
+  "requires": [],
+  "upstream": {
+    "author": "Matt Pocock",
+    "commit": "5863806dd4e15c63174bee4e7515a4256792ecfa",
+    "license": "MIT",
+    "path": "skills/productivity/grilling",
+    "repository": "https://github.com/mattpocock/skills"
+  }
+}

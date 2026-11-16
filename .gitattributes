@@ -8,3 +8,6 @@ go.sum text eol=lf
 *.png binary
 # Retain exact upstream notices and native command evidence.
 results/**/THIRD_PARTY_LICENSE_TEXTS.md -whitespace
+# Embedded packages: identical bytes on every platform, so package digests match.
+agents/** text eol=lf
+catalog/** text eol=lf

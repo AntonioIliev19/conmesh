@@ -1,3 +1,7 @@
+---
+name: dotnet-agent
+description: "C# and .NET specialist. Use to implement or review C# changes that follow the project's existing structure, conventions and tests."
+---
 # .NET Agent
 
 Implement and review C# changes using established project and test conventions.

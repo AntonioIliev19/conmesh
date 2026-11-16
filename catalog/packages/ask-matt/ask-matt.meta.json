@@ -1,0 +1,43 @@
+{
+  "index": {
+    "description": "Ask which skill or flow fits your situation. A router over the skills in this repo.",
+    "title": "Ask Matt",
+    "type": "skill"
+  },
+  "pack": "mattpocock-skills",
+  "requires": [
+    "code-review",
+    "codebase-design",
+    "diagnosing-bugs",
+    "domain-modeling",
+    "grill-me",
+    "grill-with-docs",
+    "grilling",
+    "handoff",
+    "implement",
+    "implement-spec",
+    "improve-codebase-architecture",
+    "pr",
+    "prototype",
+    "retro",
+    "setup-matt-pocock-skills",
+    "source-research",
+    "tdd",
+    "teach",
+    "to-questionnaire",
+    "to-spec",
+    "to-tickets",
+    "triage",
+    "wait-what",
+    "wayfinder",
+    "wizard",
+    "writing-for-agents"
+  ],
+  "upstream": {
+    "author": "Matt Pocock",
+    "commit": "5863806dd4e15c63174bee4e7515a4256792ecfa",
+    "license": "MIT",
+    "path": "skills/engineering/ask-matt",
+    "repository": "https://github.com/mattpocock/skills"
+  }
+}

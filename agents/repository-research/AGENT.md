@@ -1,3 +1,7 @@
+---
+name: repository-research
+description: "Repository researcher. Use to map an existing codebase and draft evidence-backed architecture notes and team-practice guidance for human review."
+---
 # Repository Research Agent
 
 Map an existing repository and draft evidence-backed guidance for human review.

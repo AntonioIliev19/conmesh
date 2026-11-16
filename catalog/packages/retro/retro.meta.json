@@ -1,0 +1,18 @@
+{
+  "index": {
+    "description": "Conduct a retrospective on a coding session.",
+    "title": "Retro",
+    "type": "skill"
+  },
+  "pack": "mattpocock-skills",
+  "requires": [
+    "writing-for-agents"
+  ],
+  "upstream": {
+    "author": "Matt Pocock",
+    "commit": "5863806dd4e15c63174bee4e7515a4256792ecfa",
+    "license": "MIT",
+    "path": "skills/engineering/retro",
+    "repository": "https://github.com/mattpocock/skills"
+  }
+}

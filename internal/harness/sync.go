@@ -226,6 +226,21 @@ func (m *Manager) Plan(ctx context.Context) (Plan, error) {
 			p.Skipped = append(p.Skipped, "knowledge "+s)
 		}
 	}
+	if cfg.Indexing.Enabled {
+		// With indexing on, ConMesh publishes its own research agent and skill
+		// under these names; an installed package with the same published name
+		// (such as the predefined repository-research agent) is covered by them.
+		kept := all[:0:0]
+		for _, pkg := range all {
+			name := portableName(pkg.Entry.ID)
+			if pkg.Entry.Type == "agent" && name == researchName || pkg.Entry.Type == "skill" && name == researchSkillName {
+				p.Skipped = append(p.Skipped, pkg.Entry.Type+" "+pkg.Entry.ID+": ConMesh's built-in "+name+" is published instead while indexing is enabled")
+				continue
+			}
+			kept = append(kept, pkg)
+		}
+		all = kept
+	}
 	next.Blocks = map[string]string{}
 	for _, h := range cfg.Harnesses {
 		if h == "cursor" || h == "copilot" {
@@ -242,7 +257,7 @@ func (m *Manager) Plan(ctx context.Context) (Plan, error) {
 			}
 			continue
 		}
-		files, err := renderPackages(h, all)
+		files, err := renderPackages(h, all, cfg.Indexing.Enabled)
 		if err != nil {
 			return p, err
 		}

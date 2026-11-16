@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/AntonioIliev19/conmesh/agents"
+	"github.com/AntonioIliev19/conmesh/catalog"
 	"github.com/AntonioIliev19/conmesh/internal/config"
 	"github.com/AntonioIliev19/conmesh/internal/security"
 )
@@ -20,8 +21,61 @@ import (
 // releases, so `package update` picks up the copy in the running binary.
 const BuiltinPrefix = "builtin:"
 
-// builtinFS is the embedded catalog; tests replace it.
-var builtinFS fs.FS = agents.FS
+// builtinFS holds every predefined package: ConMesh's own (agents/) and the
+// vendored third-party ones (catalog/packages/). Tests replace it.
+var builtinFS fs.FS = mergedFS{agents.FS, mustSub(catalog.FS, "packages")}
+
+// catalogIndex returns catalog.json, which groups the packages into packs.
+// Tests replace it.
+var catalogIndex = func() ([]byte, error) { return fs.ReadFile(catalog.FS, "catalog.json") }
+
+func mustSub(fsys fs.FS, dir string) fs.FS {
+	sub, err := fs.Sub(fsys, dir)
+	if err != nil {
+		panic(err)
+	}
+	return sub
+}
+
+// mergedFS layers package folders from several embedded trees. A package ID
+// exists in only one of them, which a test checks.
+type mergedFS []fs.FS
+
+func (m mergedFS) Open(name string) (fs.File, error) {
+	var first error
+	for _, f := range m {
+		file, err := f.Open(name)
+		if err == nil {
+			return file, nil
+		}
+		if first == nil {
+			first = err
+		}
+	}
+	return nil, first
+}
+
+func (m mergedFS) ReadDir(name string) ([]fs.DirEntry, error) {
+	var out []fs.DirEntry
+	var first error
+	found := false
+	for _, f := range m {
+		entries, err := fs.ReadDir(f, name)
+		if err != nil {
+			if first == nil {
+				first = err
+			}
+			continue
+		}
+		found = true
+		out = append(out, entries...)
+	}
+	if !found {
+		return nil, first
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].Name() < out[j].Name() })
+	return out, nil
+}
 
 // CatalogEntry describes one predefined package.
 type CatalogEntry struct {
@@ -31,6 +85,11 @@ type CatalogEntry struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	Source      string `json:"source"`
+	// Pack is the catalog pack the package belongs to.
+	Pack string `json:"pack,omitempty"`
+	// Requires lists predefined packages this one calls by name; installing
+	// it through ConMesh installs them too.
+	Requires []string `json:"requires,omitempty"`
 }
 
 // Catalog lists the predefined packages of one kind, sorted by ID. An empty
@@ -65,6 +124,7 @@ func Catalog(kind string) ([]CatalogEntry, error) {
 				Title       string `json:"title"`
 				Description string `json:"description"`
 			} `json:"index"`
+			Requires []string `json:"requires"`
 		}
 		// Catalog metadata is optional, only used for display, and carries many
 		// fields ConMesh does not read, so it is decoded leniently.
@@ -73,6 +133,12 @@ func Catalog(kind string) ([]CatalogEntry, error) {
 				e.Title = t
 			}
 			e.Description = displayText(meta.Index.Description, 200)
+			for _, id := range meta.Requires {
+				if security.ValidateID(id) != nil {
+					return nil, errors.New("invalid predefined package requirement")
+				}
+				e.Requires = append(e.Requires, id)
+			}
 		}
 		out = append(out, e)
 	}

@@ -222,6 +222,9 @@ func inventory(out string) error {
 		rel, _ := filepath.Rel(goRoot, file)
 		fmt.Fprintf(&notices, "\n## Go toolchain %s — %s\n\n```text\n%s\n```\n", runtime.Version(), filepath.ToSlash(rel), data)
 	}
+	if err := catalogNotices(&notices); err != nil {
+		return err
+	}
 	sbom := map[string]any{"bomFormat": "CycloneDX", "specVersion": "1.6", "version": 1, "metadata": map[string]any{"component": map[string]string{"type": "application", "name": "ConMesh"}, "properties": []map[string]string{{"name": "conmesh:scope", "value": "Complete Go module graph (includes build/test-only modules); native license texts accompany inventory; Go toolchain separately identified"}, {"name": "conmesh:go-version", "value": runtime.Version()}}}, "components": components}
 	data, _ := json.MarshalIndent(sbom, "", "  ")
 	if err = put(out, "sbom.cdx.json", append(data, '\n')); err != nil {

@@ -1,0 +1,16 @@
+{
+  "index": {
+    "description": "Teach the user a new skill or concept, within this workspace.",
+    "title": "Teach",
+    "type": "skill"
+  },
+  "pack": "mattpocock-skills",
+  "requires": [],
+  "upstream": {
+    "author": "Matt Pocock",
+    "commit": "5863806dd4e15c63174bee4e7515a4256792ecfa",
+    "license": "MIT",
+    "path": "skills/productivity/teach",
+    "repository": "https://github.com/mattpocock/skills"
+  }
+}

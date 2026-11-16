@@ -9,8 +9,9 @@ Before planning, ask these together in one message, and wait for the answers:
 1. **Scope:** CLI only, or setup for one or more repositories? For repositories, suggest the current Git root when available and ask for the exact paths of any others.
 2. **AI coding tools:** which tools the user works in for these repositories: Claude Code, Codex, Cursor, VS Code with GitHub Copilot, OpenCode, Windsurf, or another MCP-capable tool. Explain that ConMesh connects its MCP server (indexed code search, symbols and project knowledge) to each one, and publishes approved project knowledge in the formats those tools load by themselves.
 3. **Indexing:** whether to index any repository. Ask this separately and confirm each exact path; the MCP search tools need an index to return results.
+4. **Skill and agent packs (optional):** whether to install any packs, and for **this project only** or **all their projects** (global). Offer them by category: Token saving (`caveman`), Code-aware (`conmesh-code-aware`), Engineering workflow (`mattpocock-skills`), Code review and security (`ecc-review`), Planning and architecture (`ecc-planning`), Build and test (`ecc-build-test`), Languages and frameworks (`ecc-language-reviewers`, `conmesh-frameworks`). Say that the Caveman, Matt Pocock and ECC packs are third-party content whose authors are responsible for it.
 
-CLI-only installation skips questions 2 and 3 and ends after verification.
+CLI-only installation skips questions 2 to 4 and ends after verification.
 
 ## Plan and confirm installation
 
@@ -24,9 +25,10 @@ CLI-only installation skips questions 2 and 3 and ends after verification.
 
 1. Show the proposed commands and get confirmation before creating `.conmesh/config.yaml` or changing an existing configuration. Initialize with `conmesh init` for indexing off, or `conmesh init --index` when explicitly approved. Add `--harness` with the user's tools that ConMesh integrates directly, comma-separated: `claude`, `codex`, `cursor`, `copilot` (for example `--harness claude,cursor`). Existing settings are preserved by init; to add tools later, show and confirm the edit to the `harnesses` array in `.conmesh/config.yaml`. If indexing is off in an existing config and the user opts in, show and confirm the targeted settings edit. Follow the [migration instructions](MIGRATION.md) if legacy state is detected.
 2. Before indexing, point out that ConMesh applies its built-in exclusions, `.gitignore`, and `.conmeshignore`. Run `conmesh index` only in the confirmed roots with indexing enabled. Model downloads, semantic indexing, and research runs each require a separate user request.
-3. Run `conmesh sync --dry-run`, present the proposed file changes, and ask before applying `conmesh sync --trust`. For Claude Code and Codex, sync also connects the MCP server (`.mcp.json` and `.codex/config.toml`). For Cursor and Copilot it publishes approved knowledge only; connect their MCP server in the next section.
-4. Connect the MCP server for every chosen tool that sync does not configure, following "Connect the MCP server" below.
-5. Verify `conmesh status` per configured repository. Summarize which directories were configured and indexed, and which tools are connected to the MCP server. Tell the user to restart or reload each tool so it starts the server, and to approve the server if the tool asks. Explain that a harness model provider may receive selected code if the user later runs research.
+3. Install the packs the user chose with `conmesh pack add <pack> --trust` plus `--project` or `--global` as they answered. Always pass one of the two: without it the command asks interactively in a terminal and defaults to the project otherwise. `conmesh pack show <pack>` lists what a pack contains.
+4. Run `conmesh sync --dry-run`, present the proposed file changes, and ask before applying `conmesh sync --trust`. For Claude Code and Codex, sync also connects the MCP server (`.mcp.json` and `.codex/config.toml`). For Cursor and Copilot it publishes approved knowledge only; connect their MCP server in the next section.
+5. Connect the MCP server for every chosen tool that sync does not configure, following "Connect the MCP server" below.
+6. Verify `conmesh status` per configured repository. Summarize which directories were configured and indexed, and which tools are connected to the MCP server. Tell the user to restart or reload each tool so it starts the server, and to approve the server if the tool asks. Explain that a harness model provider may receive selected code if the user later runs research.
 
 ## Connect the MCP server
 

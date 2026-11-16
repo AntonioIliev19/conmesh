@@ -1,0 +1,18 @@
+{
+  "index": {
+    "description": "Expert TypeScript/JavaScript code reviewer specializing in type safety, async correctness, Node/web security, and idiomatic patterns. Use for all TypeScript and JavaScript code changes. MUST BE USED …",
+    "title": "TypeScript reviewer",
+    "type": "agent"
+  },
+  "pack": "ecc-language-reviewers",
+  "requires": [
+    "react-reviewer"
+  ],
+  "upstream": {
+    "author": "Affaan Mustafa (ECC)",
+    "commit": "d2ef2680594f9a17526a6e1a2e18b3d242c5d17b",
+    "license": "MIT",
+    "path": "agents/typescript-reviewer.md",
+    "repository": "https://github.com/affaan-m/ecc"
+  }
+}

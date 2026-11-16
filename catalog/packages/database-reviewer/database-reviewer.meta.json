@@ -1,0 +1,16 @@
+{
+  "index": {
+    "description": "PostgreSQL database specialist for query optimization, schema design, security, and performance. Use PROACTIVELY when writing SQL, creating migrations, designing schemas, or troubleshooting database …",
+    "title": "Database reviewer",
+    "type": "agent"
+  },
+  "pack": "ecc-review",
+  "requires": [],
+  "upstream": {
+    "author": "Affaan Mustafa (ECC)",
+    "commit": "d2ef2680594f9a17526a6e1a2e18b3d242c5d17b",
+    "license": "MIT",
+    "path": "agents/database-reviewer.md",
+    "repository": "https://github.com/affaan-m/ecc"
+  }
+}

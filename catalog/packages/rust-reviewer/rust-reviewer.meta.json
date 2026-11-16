@@ -1,0 +1,16 @@
+{
+  "index": {
+    "description": "Expert Rust code reviewer specializing in ownership, lifetimes, error handling, unsafe usage, and idiomatic patterns. Use for all Rust code changes. MUST BE USED for Rust projects.",
+    "title": "Rust reviewer",
+    "type": "agent"
+  },
+  "pack": "ecc-language-reviewers",
+  "requires": [],
+  "upstream": {
+    "author": "Affaan Mustafa (ECC)",
+    "commit": "d2ef2680594f9a17526a6e1a2e18b3d242c5d17b",
+    "license": "MIT",
+    "path": "agents/rust-reviewer.md",
+    "repository": "https://github.com/affaan-m/ecc"
+  }
+}

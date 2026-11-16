@@ -228,8 +228,8 @@ func TestListAvailableShowsPredefinedPackages(t *testing.T) {
 		t.Fatal("available JSON", err, stdout.String())
 	}
 	stdout.Reset()
-	if code := run([]string{"skill", "list", "--available", "--json"}, &stdout, &stderr, "test", dir, filepath.Join(dir, "global")); code != 0 || strings.TrimSpace(stdout.String()) != "[]" {
-		t.Fatal("no predefined skills should be []", code, stdout.String())
+	if code := run([]string{"skill", "list", "--available", "--json"}, &stdout, &stderr, "test", dir, filepath.Join(dir, "global")); code != 0 || !strings.Contains(stdout.String(), `"source": "builtin:caveman"`) || strings.Contains(stdout.String(), `"type": "agent"`) {
+		t.Fatal("predefined skills", code, stdout.String())
 	}
 	if code := run([]string{"agent", "list", "--available", "--global"}, &stdout, &stderr, "test", dir, filepath.Join(dir, "global")); code != 2 {
 		t.Fatal("--available with a scope must be a usage error", code)

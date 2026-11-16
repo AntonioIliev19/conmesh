@@ -1,0 +1,16 @@
+{
+  "index": {
+    "description": "Build a throwaway prototype to answer a design question. Use when the user wants to sanity-check whether a state model or logic feels right, or explore what a UI should look like.",
+    "title": "Prototype",
+    "type": "skill"
+  },
+  "pack": "mattpocock-skills",
+  "requires": [],
+  "upstream": {
+    "author": "Matt Pocock",
+    "commit": "5863806dd4e15c63174bee4e7515a4256792ecfa",
+    "license": "MIT",
+    "path": "skills/engineering/prototype",
+    "repository": "https://github.com/mattpocock/skills"
+  }
+}

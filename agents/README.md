@@ -1,10 +1,15 @@
-# Predefined agents
+# ConMesh's own agents and skills
 
-| Agent | Use it for |
-| --- | --- |
-| [Angular](angular-agent/AGENT.md) | Angular changes and review in an existing workspace |
-| [.NET](dotnet-agent/AGENT.md) | C# implementation and review |
-| [Repository research](repository-research/AGENT.md) | Scoped, evidence-backed Markdown guidance |
+| Package | Type | Use it for |
+| --- | --- | --- |
+| [Angular](angular-agent/AGENT.md) | agent | Angular changes and review in an existing workspace |
+| [.NET](dotnet-agent/AGENT.md) | agent | C# implementation and review |
+| [Repository research](repository-research/AGENT.md) | agent | Scoped, evidence-backed Markdown guidance |
+| [Code search](code-search/SKILL.md) | skill | Find definitions, uses and behaviour through the ConMesh index |
+| [Change impact](change-impact/SKILL.md) | skill | List what depends on a symbol or key before changing it |
+
+Third-party packs (Caveman, Matt Pocock's skills, ECC) live in
+[../catalog](../catalog); `conmesh pack list` shows everything by category.
 
 These packages ship inside ConMesh. From an initialized project, choose one under
 **Install** in the `conmesh` menu, or install it by ID:
@@ -20,8 +25,9 @@ conmesh sync --dry-run
 predefined agent from the ConMesh version you are running. A local checkout also
 works as a source: `conmesh agent add "<conmesh-checkout>/agents/angular-agent" --trust`.
 
-To add a new predefined package, create its directory here and add the directory
-name to the `go:embed` line in `catalog.go`; a test fails if you forget.
+To add a new predefined package, create its directory here, add the directory
+name to the `go:embed` line in `catalog.go`, and add it to a pack in
+[../catalog/catalog.json](../catalog/catalog.json); tests fail if you forget either.
 
 Review the agent and the sync preview before running the corresponding trusted operation. Apply an approved sync with `conmesh sync --trust`. Codex and Claude Code receive the Markdown playbook through their project agent configuration.
 

@@ -42,6 +42,7 @@ var menuOptions = []menuOption{
 // menuInfo carries facts gathered once when the menu opens. No network is used.
 type menuInfo struct {
 	width     int
+	height    int // rows; 0 when unknown
 	workspace workspaceStatus
 	packages  menuPackages
 	// leaveScreen returns to the normal screen before output that must stay
@@ -75,17 +76,19 @@ func (s *altScreen) leave() {
 // menuPackages gives the menu direct access to installed and predefined
 // packages. When unset (tests), List and Install fall back to plain commands.
 type menuPackages struct {
-	catalog []packages.CatalogEntry
+	packs   []packages.Pack
+	project string // project root, or "" outside a project
 	list    func(kind string) ([]packages.Item, error)
 }
 
 func loadMenuPackages(cwd string) menuPackages {
 	var mp menuPackages
-	mp.catalog, _ = packages.Catalog("")
+	mp.packs, _ = packages.Packs()
 	project, _, err := config.Find(cwd)
 	if err != nil {
 		project = ""
 	}
+	mp.project = project
 	global, err := config.GlobalDir()
 	if err != nil {
 		return mp
@@ -304,7 +307,7 @@ func runMenu(input io.Reader, out io.Writer, t terminal, version string, run fun
 			return -1
 		}
 		var choice int
-		choice, inputErr = pickMenu(reader, out, t, info.width, title, options, raw)
+		choice, inputErr = pickMenu(reader, out, t, info.width, info.height, title, options, raw)
 		return choice
 	}
 	prompt := func(label string) string {
@@ -339,7 +342,7 @@ func runMenu(input io.Reader, out io.Writer, t terminal, version string, run fun
 			}
 			return inputErr
 		case "install":
-			menuInstall(out, prompt, pick, confirm, run, info.packages.catalog)
+			menuInstall(out, prompt, pick, confirm, run, info.packages)
 		case "uninstall":
 			menuPackage(out, prompt, pick, confirm, run, "remove")
 		case "update":
@@ -476,41 +479,83 @@ func menuPackage(out io.Writer, prompt func(string) string, pick func(string, []
 	}
 }
 
-// menuInstall offers the predefined packages first, then any local folder or
-// HTTPS Git URL through the regular package flow.
-func menuInstall(out io.Writer, prompt func(string) string, pick func(string, []menuOption) int, confirm func(string) bool, run func([]string), catalog []packages.CatalogEntry) {
-	if len(catalog) == 0 {
+// menuInstall offers the catalog's packs by category, then a single skill or
+// agent from it, then any local folder or HTTPS Git URL.
+func menuInstall(out io.Writer, prompt func(string) string, pick func(string, []menuOption) int, confirm func(string) bool, run func([]string), mp menuPackages) {
+	if len(mp.packs) == 0 {
 		menuPackage(out, prompt, pick, confirm, run, "add")
 		return
 	}
-	options := make([]menuOption, 0, len(catalog)+1)
-	for _, e := range catalog {
-		options = append(options, menuOption{group: "Predefined " + e.Type + "s", subtitle: "shipped with ConMesh", name: e.Title, description: e.Description,
-			sameAs: []string{"conmesh " + e.Type + " add " + e.Source + " --trust"}})
+	options := make([]menuOption, 0, len(mp.packs)+2)
+	for _, p := range mp.packs {
+		options = append(options, menuOption{group: p.CategoryTitle, name: p.Title, description: packCounts(p) + "  " + p.Description,
+			sameAs: []string{"conmesh pack add " + p.ID + " --trust"}})
 	}
-	options = append(options, menuOption{group: "Other source", name: "Folder or web URL", description: "Local package directory or HTTPS Git URL",
-		sameAs: []string{"conmesh skill add <source> --trust", "conmesh agent add <source> --trust"}})
+	options = append(options,
+		menuOption{group: "Other", name: "Folder or web URL", description: "Local package directory or HTTPS Git URL",
+			sameAs: []string{"conmesh skill add <source> --trust", "conmesh agent add <source> --trust"}})
 	choice := pick("Choose what to install", options)
 	if choice < 0 {
 		return
 	}
-	if choice == len(catalog) {
+	if choice == len(mp.packs) {
 		menuPackage(out, prompt, pick, confirm, run, "add")
 		return
 	}
-	e := catalog[choice]
-	scopes := []menuOption{{name: "project", description: "Current project"}, {name: "global", description: "All projects for this user"}}
-	selected := pick("Choose a scope", scopes)
+	p := mp.packs[choice]
+	items := []menuOption{{group: p.Title, subtitle: packOrigin(p), name: "Whole pack", description: packCounts(p),
+		sameAs: []string{"conmesh pack add " + p.ID + " --trust"}}}
+	for _, e := range p.Members {
+		items = append(items, menuOption{group: "Or just one", name: e.Title, description: e.Type + "  " + e.Description,
+			sameAs: []string{"conmesh " + e.Type + " add " + e.Source + " --trust"}})
+	}
+	choice = pick("Install the whole pack or one item?", items)
+	if choice < 0 {
+		return
+	}
+	args := []string{"pack", "add", p.ID}
+	ids := make([]string, 0, len(p.Members))
+	for _, e := range p.Members {
+		ids = append(ids, e.ID)
+	}
+	if choice > 0 {
+		e := p.Members[choice-1]
+		args = []string{e.Type, "add", e.Source}
+		ids = []string{e.ID}
+	}
+	scopes := scopeOptions(mp.project)
+	selected := pick("Install for which projects?", scopes)
 	if selected < 0 {
 		return
 	}
-	scope := scopes[selected].name
-	fmt.Fprintf(out, "  add %s %s %s (%s scope)\n", e.Type, e.ID, e.Version, scope)
-	fmt.Fprintln(out, "  Its instructions and license are copied into ConMesh's package store;")
-	fmt.Fprintln(out, "  review them and `conmesh sync --dry-run` before applying with --trust.")
-	if confirm("Apply this package change?") {
-		run([]string{e.Type, "add", e.Source, "--" + scope, "--trust"})
+	scope := scopes[selected].id
+	entries, err := packages.WithRequires(ids)
+	if err != nil {
+		fmt.Fprintln(out, "  "+err.Error())
+		return
 	}
+	names := make([]string, 0, len(entries))
+	for _, e := range entries {
+		names = append(names, e.ID)
+	}
+	fmt.Fprintf(out, "  Installs %s for %s: %s\n", plural(len(entries), "package"), scopeLabel(scope), clip(strings.Join(names, ", "), 400))
+	if len(entries) > len(ids) {
+		fmt.Fprintln(out, "  Includes the predefined packages these call by name.")
+	}
+	if p.ThirdParty {
+		fmt.Fprintf(out, "  %s is third-party content by %s (%s). Its authors are responsible for it, not ConMesh.\n", p.Title, p.Author, p.License)
+	}
+	fmt.Fprintln(out, "  Review the instructions in the package store, then publish them with conmesh sync.")
+	if confirm("Install now?") {
+		run(append(args, "--"+scope, "--trust"))
+	}
+}
+
+func scopeLabel(scope string) string {
+	if scope == "global" {
+		return "all your projects"
+	}
+	return "this project"
 }
 
 // menuPackageArgs is the command a package menu flow runs before optional

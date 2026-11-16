@@ -1,0 +1,213 @@
+{
+  "schema_version": 1,
+  "categories": [
+    {
+      "id": "token-saving",
+      "title": "Token saving",
+      "packs": [
+        {
+          "id": "caveman",
+          "title": "Caveman",
+          "description": "Terse output modes, compressed commit and review messages, and subagents that return path:line tables instead of prose.",
+          "author": "Julius Brussee",
+          "url": "https://github.com/juliusbrussee/caveman",
+          "license": "Apache-2.0",
+          "commit": "9b243662ff98d392bc0a95b865a554583d71be75",
+          "version": "2026.11.16",
+          "notices": ["LICENSE", "NOTICE", "LICENSE-MIT"],
+          "distinct_names": ["caveman", "ultracave", "megacave", "cavecrew"],
+          "members": [
+            {"id": "caveman", "type": "skill", "path": "skills/caveman"},
+            {"id": "ultracave", "type": "skill", "path": "skills/ultracave"},
+            {"id": "megacave", "type": "skill", "path": "skills/megacave"},
+            {"id": "caveman-commit", "type": "skill", "path": "skills/caveman-commit"},
+            {"id": "caveman-review", "type": "skill", "path": "skills/caveman-review"},
+            {"id": "cavecrew", "title": "Cavecrew", "type": "skill", "path": "skills/cavecrew"},
+            {"id": "investigate-first", "type": "skill", "path": "skills/investigate-first"},
+            {"id": "surgical-patch", "type": "skill", "path": "skills/surgical-patch"},
+            {"id": "lean-build", "type": "skill", "path": "skills/lean-build"},
+            {"id": "safe-refactor", "type": "skill", "path": "skills/safe-refactor"},
+            {"id": "migration", "type": "skill", "path": "skills/migration"},
+            {"id": "verify-and-stop", "type": "skill", "path": "skills/verify-and-stop"},
+            {"id": "cavecrew-investigator", "type": "agent", "path": "agents/cavecrew-investigator.md"},
+            {"id": "cavecrew-builder", "type": "agent", "path": "agents/cavecrew-builder.md"},
+            {"id": "cavecrew-reviewer", "type": "agent", "path": "agents/cavecrew-reviewer.md"}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "code-aware",
+      "title": "Code-aware (ConMesh index)",
+      "packs": [
+        {
+          "id": "conmesh-code-aware",
+          "title": "ConMesh code-aware",
+          "description": "Find code, check the impact of a change and research the repository through the project's ConMesh index instead of broad file reads.",
+          "author": "ConMesh",
+          "license": "Apache-2.0",
+          "members": [
+            {"id": "code-search", "type": "skill"},
+            {"id": "change-impact", "type": "skill"},
+            {"id": "repository-research", "type": "agent"}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "engineering",
+      "title": "Engineering workflow",
+      "packs": [
+        {
+          "id": "mattpocock-skills",
+          "title": "Matt Pocock skills",
+          "description": "Grilling sessions, specs and tickets, TDD, bug diagnosis, code review and codebase design, built to compose with each other.",
+          "author": "Matt Pocock",
+          "url": "https://github.com/mattpocock/skills",
+          "license": "MIT",
+          "commit": "5863806dd4e15c63174bee4e7515a4256792ecfa",
+          "version": "1.3.2",
+          "notices": ["LICENSE"],
+          "distinct_names": ["tdd"],
+          "members": [
+            {"id": "grilling", "type": "skill", "path": "skills/productivity/grilling"},
+            {"id": "grill-me", "type": "skill", "path": "skills/productivity/grill-me"},
+            {"id": "grill-with-docs", "type": "skill", "path": "skills/engineering/grill-with-docs"},
+            {"id": "domain-modeling", "type": "skill", "path": "skills/engineering/domain-modeling"},
+            {"id": "setup-matt-pocock-skills", "title": "Set up Matt Pocock skills", "type": "skill", "path": "skills/engineering/setup-matt-pocock-skills", "requires": []},
+            {"id": "ask-matt", "title": "Ask Matt", "type": "skill", "path": "skills/engineering/ask-matt"},
+            {"id": "to-spec", "type": "skill", "path": "skills/engineering/to-spec"},
+            {"id": "to-tickets", "type": "skill", "path": "skills/engineering/to-tickets"},
+            {"id": "implement", "type": "skill", "path": "skills/engineering/implement"},
+            {"id": "implement-spec", "type": "skill", "path": "skills/engineering/implement-spec"},
+            {"id": "tdd", "title": "TDD", "type": "skill", "path": "skills/engineering/tdd"},
+            {"id": "diagnosing-bugs", "type": "skill", "path": "skills/engineering/diagnosing-bugs"},
+            {"id": "code-review", "type": "skill", "path": "skills/engineering/code-review"},
+            {"id": "codebase-design", "type": "skill", "path": "skills/engineering/codebase-design"},
+            {"id": "improve-codebase-architecture", "type": "skill", "path": "skills/engineering/improve-codebase-architecture"},
+            {"id": "prototype", "type": "skill", "path": "skills/engineering/prototype"},
+            {"id": "source-research", "upstream_name": "research", "type": "skill", "path": "skills/engineering/research"},
+            {"id": "triage", "type": "skill", "path": "skills/engineering/triage"},
+            {"id": "wayfinder", "type": "skill", "path": "skills/engineering/wayfinder"},
+            {"id": "pr", "title": "PR description", "type": "skill", "path": "skills/engineering/pr"},
+            {"id": "retro", "type": "skill", "path": "skills/engineering/retro"},
+            {"id": "wizard", "type": "skill", "path": "skills/engineering/wizard"},
+            {"id": "handoff", "type": "skill", "path": "skills/productivity/handoff"},
+            {"id": "teach", "type": "skill", "path": "skills/productivity/teach"},
+            {"id": "to-questionnaire", "type": "skill", "path": "skills/productivity/to-questionnaire"},
+            {"id": "wait-what", "title": "Wait, what?", "type": "skill", "path": "skills/productivity/wait-what"},
+            {"id": "writing-for-agents", "type": "skill", "path": "skills/productivity/writing-for-agents"}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "review",
+      "title": "Code review and security",
+      "packs": [
+        {
+          "id": "ecc-review",
+          "title": "ECC review agents",
+          "description": "Reviewers for quality, security, silent failures, database code and performance, plus dead-code cleanup.",
+          "author": "Affaan Mustafa (ECC)",
+          "url": "https://github.com/affaan-m/ecc",
+          "license": "MIT",
+          "commit": "d2ef2680594f9a17526a6e1a2e18b3d242c5d17b",
+          "version": "2026.11.16",
+          "notices": ["LICENSE"],
+          "members": [
+            {"id": "code-reviewer", "type": "agent", "path": "agents/code-reviewer.md"},
+            {"id": "security-reviewer", "type": "agent", "path": "agents/security-reviewer.md"},
+            {"id": "silent-failure-hunter", "type": "agent", "path": "agents/silent-failure-hunter.md"},
+            {"id": "database-reviewer", "type": "agent", "path": "agents/database-reviewer.md"},
+            {"id": "performance-optimizer", "type": "agent", "path": "agents/performance-optimizer.md"},
+            {"id": "refactor-cleaner", "type": "agent", "path": "agents/refactor-cleaner.md"}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "planning",
+      "title": "Planning and architecture",
+      "packs": [
+        {
+          "id": "ecc-planning",
+          "title": "ECC planning agents",
+          "description": "Implementation planning, architecture decisions, codebase exploration and documentation updates.",
+          "author": "Affaan Mustafa (ECC)",
+          "url": "https://github.com/affaan-m/ecc",
+          "license": "MIT",
+          "commit": "d2ef2680594f9a17526a6e1a2e18b3d242c5d17b",
+          "version": "2026.11.16",
+          "notices": ["LICENSE"],
+          "members": [
+            {"id": "planner", "type": "agent", "path": "agents/planner.md"},
+            {"id": "architect", "type": "agent", "path": "agents/architect.md"},
+            {"id": "code-explorer", "type": "agent", "path": "agents/code-explorer.md"},
+            {"id": "doc-updater", "type": "agent", "path": "agents/doc-updater.md"}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "build-test",
+      "title": "Build and test",
+      "packs": [
+        {
+          "id": "ecc-build-test",
+          "title": "ECC build and test",
+          "description": "Fix build errors, drive test-first development, run end-to-end tests and verify work before calling it done.",
+          "author": "Affaan Mustafa (ECC)",
+          "url": "https://github.com/affaan-m/ecc",
+          "license": "MIT",
+          "commit": "d2ef2680594f9a17526a6e1a2e18b3d242c5d17b",
+          "version": "2026.11.16",
+          "notices": ["LICENSE"],
+          "members": [
+            {"id": "build-error-resolver", "title": "Build error resolver", "type": "agent", "path": "agents/build-error-resolver.md"},
+            {"id": "tdd-guide", "type": "agent", "path": "agents/tdd-guide.md"},
+            {"id": "e2e-runner", "title": "E2E runner", "type": "agent", "path": "agents/e2e-runner.md"},
+            {"id": "verification-loop", "type": "skill", "path": "skills/verification-loop"}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "languages",
+      "title": "Languages and frameworks",
+      "packs": [
+        {
+          "id": "ecc-language-reviewers",
+          "title": "ECC language reviewers",
+          "description": "Language-specific reviewers for TypeScript, React, Python, Go, Rust, Java and C#.",
+          "author": "Affaan Mustafa (ECC)",
+          "url": "https://github.com/affaan-m/ecc",
+          "license": "MIT",
+          "commit": "d2ef2680594f9a17526a6e1a2e18b3d242c5d17b",
+          "version": "2026.11.16",
+          "notices": ["LICENSE"],
+          "members": [
+            {"id": "typescript-reviewer", "title": "TypeScript reviewer", "type": "agent", "path": "agents/typescript-reviewer.md"},
+            {"id": "react-reviewer", "type": "agent", "path": "agents/react-reviewer.md"},
+            {"id": "python-reviewer", "type": "agent", "path": "agents/python-reviewer.md"},
+            {"id": "go-reviewer", "type": "agent", "path": "agents/go-reviewer.md"},
+            {"id": "rust-reviewer", "type": "agent", "path": "agents/rust-reviewer.md"},
+            {"id": "java-reviewer", "type": "agent", "path": "agents/java-reviewer.md"},
+            {"id": "csharp-reviewer", "title": "C# reviewer", "type": "agent", "path": "agents/csharp-reviewer.md"}
+          ]
+        },
+        {
+          "id": "conmesh-frameworks",
+          "title": "ConMesh framework agents",
+          "description": "Angular and .NET agents for changes and review in existing workspaces.",
+          "author": "ConMesh",
+          "license": "Apache-2.0",
+          "members": [
+            {"id": "angular-agent", "type": "agent"},
+            {"id": "dotnet-agent", "type": "agent"}
+          ]
+        }
+      ]
+    }
+  ]
+}

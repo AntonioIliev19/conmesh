@@ -1,0 +1,16 @@
+{
+  "index": {
+    "description": "Build and sharpen a project's domain model. Use when discussing codebase terminology, writing or editing a GLOSSARY.md, or recording or editing an ADR.",
+    "title": "Domain modeling",
+    "type": "skill"
+  },
+  "pack": "mattpocock-skills",
+  "requires": [],
+  "upstream": {
+    "author": "Matt Pocock",
+    "commit": "5863806dd4e15c63174bee4e7515a4256792ecfa",
+    "license": "MIT",
+    "path": "skills/engineering/domain-modeling",
+    "repository": "https://github.com/mattpocock/skills"
+  }
+}

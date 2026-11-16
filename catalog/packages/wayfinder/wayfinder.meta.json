@@ -1,0 +1,22 @@
+{
+  "index": {
+    "description": "Plan a huge chunk of work (more than one agent session can hold) as a shared map of decision tickets on your issue tracker, and resolve them one at a time until the way to the destination is clear.",
+    "title": "Wayfinder",
+    "type": "skill"
+  },
+  "pack": "mattpocock-skills",
+  "requires": [
+    "domain-modeling",
+    "grilling",
+    "prototype",
+    "setup-matt-pocock-skills",
+    "source-research"
+  ],
+  "upstream": {
+    "author": "Matt Pocock",
+    "commit": "5863806dd4e15c63174bee4e7515a4256792ecfa",
+    "license": "MIT",
+    "path": "skills/engineering/wayfinder",
+    "repository": "https://github.com/mattpocock/skills"
+  }
+}

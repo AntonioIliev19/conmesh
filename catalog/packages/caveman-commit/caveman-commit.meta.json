@@ -1,0 +1,16 @@
+{
+  "index": {
+    "description": "Write a Conventional Commits message compressed to intent only. Use for \"write a commit\", \"commit message\", /commit or /conmesh-caveman-commit.",
+    "title": "Caveman commit",
+    "type": "skill"
+  },
+  "pack": "caveman",
+  "requires": [],
+  "upstream": {
+    "author": "Julius Brussee",
+    "commit": "9b243662ff98d392bc0a95b865a554583d71be75",
+    "license": "Apache-2.0",
+    "path": "skills/caveman-commit",
+    "repository": "https://github.com/juliusbrussee/caveman"
+  }
+}

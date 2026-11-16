@@ -1,0 +1,16 @@
+{
+  "index": {
+    "description": "End-to-end testing specialist using Vercel Agent Browser (preferred) with Playwright fallback. Use PROACTIVELY for generating, maintaining, and running E2E tests. Manages test journeys, quarantines f…",
+    "title": "E2E runner",
+    "type": "agent"
+  },
+  "pack": "ecc-build-test",
+  "requires": [],
+  "upstream": {
+    "author": "Affaan Mustafa (ECC)",
+    "commit": "d2ef2680594f9a17526a6e1a2e18b3d242c5d17b",
+    "license": "MIT",
+    "path": "agents/e2e-runner.md",
+    "repository": "https://github.com/affaan-m/ecc"
+  }
+}

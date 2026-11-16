@@ -1,0 +1,16 @@
+{
+  "index": {
+    "description": "Investigate a question against high-trust primary sources and capture the findings as a Markdown file in the repo. Use when the user wants a topic researched, docs or API facts gathered, or reading l…",
+    "title": "Source research",
+    "type": "skill"
+  },
+  "pack": "mattpocock-skills",
+  "requires": [],
+  "upstream": {
+    "author": "Matt Pocock",
+    "commit": "5863806dd4e15c63174bee4e7515a4256792ecfa",
+    "license": "MIT",
+    "path": "skills/engineering/research",
+    "repository": "https://github.com/mattpocock/skills"
+  }
+}

@@ -8,9 +8,11 @@
 
 ConMesh also manages agents and skills and can expose its index over MCP to Claude Code, Codex, and other compatible hosts.
 
-Browse the [predefined agents](agents/) for Angular, .NET, and repository research.
-They ship inside ConMesh: pick one under **Install** in the menu, or run
-`conmesh agent list --available` and `conmesh agent add builtin:<id> --trust`.
+ConMesh ships a catalog of skill and agent packs, grouped by category, that install with one
+command and use ConMesh's code index: [Caveman](https://github.com/juliusbrussee/caveman)
+for token saving, [Matt Pocock's skills](https://github.com/mattpocock/skills) for
+engineering workflow, [ECC](https://github.com/affaan-m/ecc) reviewers and planners, and
+ConMesh's own code-aware skills. See [Skill and agent packs](#skill-and-agent-packs).
 
 ## Fast install with your coding agent
 
@@ -59,8 +61,9 @@ conmesh --help
 Run `conmesh` or `conmesh menu` in a terminal. The menu shows the current workspace
 and version, then groups its items under **Packages** (Install, Update, List,
 Uninstall; see [Third-party agents and skills](#third-party-agents-and-skills)), **Project** (Workspace, Doctor) and **ConMesh** (Help, Self-update,
-Quit). **Install** lists the predefined agents first, then accepts any local
-package folder or HTTPS Git URL. **List** shows installed agents and skills under
+Quit). **Install** lists the catalog's packs by category. Pick a pack, then install
+all of it or a single skill or agent from it, and choose whether it is for this project
+or all your projects. **Install** also accepts any local package folder or HTTPS Git URL. **List** shows installed agents and skills under
 their own headings. **Update** updates an installed agent or skill; **Self-update**
 checks for and installs a verified ConMesh release. The "same as" line under the menu shows
 the equivalent command for the highlighted item.
@@ -236,20 +239,69 @@ of the code. Commit these files to share them with your team.
 - **Edit the source, not the copy:** change `.conmesh/knowledge/`, approve it,
   and sync again. Edits to the published skill files are overwritten.
 
+## Skill and agent packs
+
+Packs are groups of skills and agents that work together. They ship inside
+ConMesh, so installing one needs no network access.
+
+| Category | Pack | What you get | Install |
+|---|---|---|---|
+| Token saving | `caveman` | Terse output modes (`/conmesh-caveman`, `/conmesh-ultracave`), compressed commit and review messages, small task workflows, and three subagents that return `path:line` tables instead of prose. 12 skills, 3 agents. | `conmesh pack add caveman --trust` |
+| Code-aware | `conmesh-code-aware` | `code-search` and `change-impact` skills that answer from the ConMesh index, plus the repository research agent. | `conmesh pack add conmesh-code-aware --trust` |
+| Engineering workflow | `mattpocock-skills` | Grilling sessions, specs and tickets, TDD, bug diagnosis, code review and codebase design. 27 skills. | `conmesh pack add mattpocock-skills --trust` |
+| Code review and security | `ecc-review` | Code, security, silent-failure, database and performance reviewers, plus dead-code cleanup. 6 agents. | `conmesh pack add ecc-review --trust` |
+| Planning and architecture | `ecc-planning` | Planner, architect, code explorer and doc updater. 4 agents. | `conmesh pack add ecc-planning --trust` |
+| Build and test | `ecc-build-test` | Build-error resolver, TDD guide, E2E runner and a verification loop. | `conmesh pack add ecc-build-test --trust` |
+| Languages and frameworks | `ecc-language-reviewers`, `conmesh-frameworks` | TypeScript, React, Python, Go, Rust, Java and C# reviewers; Angular and .NET agents. | `conmesh pack add <pack> --trust` |
+
+```text
+conmesh pack list                     # every pack, by category
+conmesh pack show caveman             # what a pack installs
+conmesh pack add caveman --trust      # install it
+conmesh skill add builtin:tdd --trust # or a single skill (agent add for agents)
+conmesh sync --trust                  # publish to Claude Code, Codex and the rest
+```
+
+In a terminal, `pack add`, `skill add` and `agent add` ask whether to install
+for **this project** or **all your projects** (global) unless you pass
+`--project` or `--global`. Global packages reach a project the next time you run
+`conmesh sync` in it. Scripts and `--no-input` default to the project.
+
+A single skill or agent brings the ones it calls by name, so `grill-with-docs`
+also installs `grilling` and `domain-modeling`. A pack installs in one step: if
+one of its packages cannot be installed, for example because you already have
+your own package with that ID, nothing is installed.
+
+Published skills and agents use ConMesh names, such as `/conmesh-tdd` or the
+`conmesh-code-reviewer` agent. ConMesh only ever writes files with its own
+prefix, so it never overwrites your files. References between the skills of a
+pack use the same names. When the project has indexing enabled, every published
+skill and agent also gets a short section telling it to find code through the
+ConMesh index (`conmesh_find_symbol`, `conmesh_find_reference_candidates`,
+`conmesh_search_codebase`) before reading files broadly. Agents that limit their
+tools are given the ConMesh index tools as well.
+
+The third-party packs are copies of exact upstream commits. Each package folder
+keeps the upstream licence files and a `CONMESH-CHANGES.md` that lists what
+ConMesh changed. Maintainers refresh them with `go run ./tools/catalog` after
+reviewing the new upstream commit; see [catalog/README.md](catalog/README.md).
+
 ## Third-party agents and skills
 
-ConMesh can install agents and skills from three kinds of source: the predefined
-packages shipped with ConMesh (`builtin:<id>`), a local folder, or any HTTPS Git
-repository. ConMesh verifies what it copies (manifest, license, file limits, no
-secrets, no executable hooks), but it does not review what a third-party
-package tells your agent to do.
+ConMesh can install agents and skills from three kinds of source: the packs and
+predefined packages shipped with ConMesh (`builtin:<id>`), a local folder, or any
+HTTPS Git repository. ConMesh verifies what it copies (manifest, license, file
+limits, no secrets, no executable hooks), but it does not review what a
+third-party package tells your agent to do.
 
-**Packages from a local folder or a Git URL are provided by their authors, not
-by the ConMesh project.** Their authors are responsible for their content,
-license and behaviour. Before you pass `--trust`, read the package's
-instructions and license yourself, and install only packages you trust. The
-ConMesh project and its contributors accept no responsibility for third-party
-packages or for anything an agent does while following them.
+**Third-party packages are provided by their authors, not by the ConMesh
+project.** This includes the Caveman, Matt Pocock and ECC packs in the catalog
+as well as anything installed from a local folder or a Git URL. Their authors
+are responsible for their content, license and behaviour. Before you pass
+`--trust`, read the package's instructions and license yourself, and install
+only packages you trust. The ConMesh project and its contributors accept no
+responsibility for third-party packages or for anything an agent does while
+following them.
 
 ## Implementation status
 
@@ -290,9 +342,12 @@ ConMesh is licensed under [Apache-2.0](LICENSE). See [third-party notices](THIRD
 
 - [AWS AI-DLC workflows](https://github.com/awslabs/aidlc-workflows) — harness-neutral methodologies.
 - [Yuval Yeret Portfolio PDLC](https://github.com/yyeret/portfolio-pdlc) — evidence-based workflows.
-- [Matt Pocock skills](https://github.com/mattpocock/skills) — composable skills, optional third-party packs.
+- [Matt Pocock skills](https://github.com/mattpocock/skills) — composable skills, shipped as an optional catalog pack.
+- [ECC](https://github.com/affaan-m/ecc) — a large agent and skill collection; the catalog's packs follow its idea, backed by ConMesh's code index.
 
-Do not automatically vendor or copy external repositories. Verify source, license and compatibility before any incorporation.
+Do not vendor or copy external repositories outside the catalog. Catalog content
+is copied only from a pinned commit, after reviewing its source, licence and
+compatibility, with its licence files and a record of ConMesh's changes.
 
 
 ## Release versions

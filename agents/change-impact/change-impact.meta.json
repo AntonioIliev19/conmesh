@@ -1,0 +1,15 @@
+{
+  "category": "code-aware",
+  "languageKey": "agnostic",
+  "index": {
+    "title": "Change impact",
+    "slug": "change-impact",
+    "description": "List what depends on a function, type or key before changing it, using the ConMesh index.",
+    "type": "skill",
+    "tags": [
+      "conmesh",
+      "index",
+      "tokens"
+    ]
+  }
+}

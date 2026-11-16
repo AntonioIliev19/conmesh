@@ -1,0 +1,18 @@
+{
+  "index": {
+    "description": "Review the changes since a fixed point (commit, branch, tag, or merge-base) along two axes: Standards (does the code follow this repo's documented coding standards?) and Spec (does the code match wha…",
+    "title": "Code review",
+    "type": "skill"
+  },
+  "pack": "mattpocock-skills",
+  "requires": [
+    "setup-matt-pocock-skills"
+  ],
+  "upstream": {
+    "author": "Matt Pocock",
+    "commit": "5863806dd4e15c63174bee4e7515a4256792ecfa",
+    "license": "MIT",
+    "path": "skills/engineering/code-review",
+    "repository": "https://github.com/mattpocock/skills"
+  }
+}

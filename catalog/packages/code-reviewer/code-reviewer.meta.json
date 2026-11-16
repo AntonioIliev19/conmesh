@@ -1,0 +1,16 @@
+{
+  "index": {
+    "description": "Expert code review specialist. Proactively reviews code for quality, security, and maintainability. Use immediately after writing or modifying code. MUST BE USED for all code changes.",
+    "title": "Code reviewer",
+    "type": "agent"
+  },
+  "pack": "ecc-review",
+  "requires": [],
+  "upstream": {
+    "author": "Affaan Mustafa (ECC)",
+    "commit": "d2ef2680594f9a17526a6e1a2e18b3d242c5d17b",
+    "license": "MIT",
+    "path": "agents/code-reviewer.md",
+    "repository": "https://github.com/affaan-m/ecc"
+  }
+}

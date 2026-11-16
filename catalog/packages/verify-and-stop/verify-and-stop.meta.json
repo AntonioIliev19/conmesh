@@ -1,0 +1,16 @@
+{
+  "index": {
+    "description": "Prove existing work meets acceptance conditions without expanding scope. Use for validation-only tasks, completion checks, focused gate runs, and last-mile proof.",
+    "title": "Verify and stop",
+    "type": "skill"
+  },
+  "pack": "caveman",
+  "requires": [],
+  "upstream": {
+    "author": "Julius Brussee",
+    "commit": "9b243662ff98d392bc0a95b865a554583d71be75",
+    "license": "Apache-2.0",
+    "path": "skills/verify-and-stop",
+    "repository": "https://github.com/juliusbrussee/caveman"
+  }
+}

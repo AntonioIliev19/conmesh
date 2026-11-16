@@ -57,11 +57,17 @@ Commands:
   agent|skill list --available [--json]  Predefined packages shipped with ConMesh
   agent|skill remove <id> [--global|--project]
   package update <id> --type agent|skill --trust [--version ref] [--global|--project]
+  pack list [--json]                Skill and agent packs by category
+  pack show <pack> [--json]         What a pack installs
+  pack add <pack> --trust [--global|--project]  Install a whole pack at once
 
 Review package instructions and license before --trust. Git sources require an
-exact --version ref; builtin:id sources need none. Archives and package hooks are unsupported. Package scope
-for add/remove/update defaults to project; list defaults to all scopes. Project
-overrides shadow project packages, then global ones.
+exact --version ref; builtin:id sources need none, and also install the
+predefined packages they call. Archives and package hooks are unsupported.
+In a terminal, add asks whether to install for this project or all projects
+unless --project or --global is given; otherwise add, remove and update default
+to project scope. List defaults to all scopes. Project overrides shadow project
+packages, then global ones.
 `
 
 // Run executes one command. Exit codes: 0 success, 1 operational/output failure,
@@ -72,7 +78,7 @@ func Run(args []string, stdout, stderr io.Writer, version string) int {
 		out := terminalForOptions(stdout, g.noColor)
 		if file, ok := stdout.(*os.File); !g.noInput && out.live && ok && isTerminal(os.Stdin) && enableColor(file) {
 			cwd, _ := os.Getwd()
-			info := menuInfo{width: terminalWidth(file), workspace: loadWorkspace(context.Background(), cwd), packages: loadMenuPackages(cwd)}
+			info := menuInfo{width: terminalWidth(file), height: terminalHeight(file), workspace: loadWorkspace(context.Background(), cwd), packages: loadMenuPackages(cwd)}
 			// The menu runs on the terminal's alternate screen, like full-screen
 			// terminal programs: the user's earlier commands are hidden while it is
 			// open and come back unchanged when it closes.
@@ -115,6 +121,12 @@ func Run(args []string, stdout, stderr io.Writer, version string) int {
 			}
 			return Run(g.with(append([]string{suggestion}, args[1:]...)), stdout, stderr, version)
 		}
+	}
+	// An interactive install that names no scope asks where it should go.
+	args, err := promptScope(args, stderr, g)
+	if err != nil {
+		fmt.Fprintln(stderr, "conmesh:", err)
+		return 1
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
@@ -310,7 +322,7 @@ func executeCommand(ctx context.Context, args []string, version, cwd, global str
 			return "", err
 		}
 		return "Verified update installed; previous executable retained for update --rollback.\n", nil
-	case "init", "status", "index", "search", "symbol", "references", "knowledge", "agent", "skill", "package", "sync":
+	case "init", "status", "index", "search", "symbol", "references", "knowledge", "agent", "skill", "package", "pack", "sync":
 	default:
 		return "", errUsage
 	}
@@ -493,6 +505,9 @@ func executeCommand(ctx context.Context, args []string, version, cwd, global str
 	if len(args) < 2 {
 		return "", errUsage
 	}
+	if args[0] == "pack" {
+		return packCommand(ctx, m, args, project, report)
+	}
 	if args[0] == "package" {
 		if args[1] != "update" {
 			return "", errUsage
@@ -544,6 +559,19 @@ func executeCommand(ctx context.Context, args []string, version, cwd, global str
 			return "", errUsage
 		}
 		source := opts.positionals[0]
+		if id, ok := strings.CutPrefix(source, packages.BuiltinPrefix); ok && opts.values["version"] == "" {
+			// A predefined package brings the predefined packages it calls by name.
+			entries, err := packages.WithRequires([]string{id})
+			if err != nil {
+				return "", err
+			}
+			if entries[0].Type != kind {
+				return "", fmt.Errorf("%s is a predefined %s; use conmesh %s add", id, entries[0].Type, entries[0].Type)
+			}
+			if len(entries) > 1 {
+				return installCatalog(ctx, m, []string{id}, scope, opts.has("trust"), project, report)
+			}
+		}
 		if !strings.Contains(source, "://") && !strings.HasPrefix(source, packages.BuiltinPrefix) && !filepath.IsAbs(source) {
 			source = filepath.Join(cwd, source)
 		}

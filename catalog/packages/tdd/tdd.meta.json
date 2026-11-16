@@ -1,0 +1,19 @@
+{
+  "index": {
+    "description": "Test-driven development. Use when the user wants to build features or fix bugs test-first, mentions \"red-green-refactor\", or wants integration tests.",
+    "title": "TDD",
+    "type": "skill"
+  },
+  "pack": "mattpocock-skills",
+  "requires": [
+    "code-review",
+    "codebase-design"
+  ],
+  "upstream": {
+    "author": "Matt Pocock",
+    "commit": "5863806dd4e15c63174bee4e7515a4256792ecfa",
+    "license": "MIT",
+    "path": "skills/engineering/tdd",
+    "repository": "https://github.com/mattpocock/skills"
+  }
+}

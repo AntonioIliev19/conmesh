@@ -1,0 +1,16 @@
+{
+  "index": {
+    "description": "Documentation and codemap specialist. Use PROACTIVELY for updating codemaps and documentation. Generates docs/CODEMAPS/*, updates READMEs and guides. Backs the /update-codemaps and /update-docs comma…",
+    "title": "Doc updater",
+    "type": "agent"
+  },
+  "pack": "ecc-planning",
+  "requires": [],
+  "upstream": {
+    "author": "Affaan Mustafa (ECC)",
+    "commit": "d2ef2680594f9a17526a6e1a2e18b3d242c5d17b",
+    "license": "MIT",
+    "path": "agents/doc-updater.md",
+    "repository": "https://github.com/affaan-m/ecc"
+  }
+}

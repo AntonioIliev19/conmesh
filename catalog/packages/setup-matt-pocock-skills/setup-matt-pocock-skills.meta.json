@@ -1,0 +1,16 @@
+{
+  "index": {
+    "description": "Configure this repo for the engineering skills: set up its issue tracker, triage label vocabulary, and domain doc layout. Run once before first use of the other engineering skills.",
+    "title": "Set up Matt Pocock skills",
+    "type": "skill"
+  },
+  "pack": "mattpocock-skills",
+  "requires": [],
+  "upstream": {
+    "author": "Matt Pocock",
+    "commit": "5863806dd4e15c63174bee4e7515a4256792ecfa",
+    "license": "MIT",
+    "path": "skills/engineering/setup-matt-pocock-skills",
+    "repository": "https://github.com/mattpocock/skills"
+  }
+}

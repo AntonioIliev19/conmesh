@@ -1,0 +1,20 @@
+{
+  "index": {
+    "description": "Move issues and external PRs through a state machine of triage roles, categorise, verify, grill if needed, and write agent-ready briefs.",
+    "title": "Triage",
+    "type": "skill"
+  },
+  "pack": "mattpocock-skills",
+  "requires": [
+    "domain-modeling",
+    "grilling",
+    "setup-matt-pocock-skills"
+  ],
+  "upstream": {
+    "author": "Matt Pocock",
+    "commit": "5863806dd4e15c63174bee4e7515a4256792ecfa",
+    "license": "MIT",
+    "path": "skills/engineering/triage",
+    "repository": "https://github.com/mattpocock/skills"
+  }
+}

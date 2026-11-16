@@ -27,6 +27,22 @@ Regenerate in a **new** directory with:
 go run ./tools/release --inventory-only --out path-to-new-private-inventory
 ```
 
-No embedding model weights, Matt Pocock skills or other external skill assets are
-bundled by this release-preparation work. A user-supplied model or package has its
-own separate license and provenance requirements.
+## Skill and agent catalog
+
+The ConMesh binary embeds a catalog of third-party skills and agents, copied
+from pinned upstream commits into [catalog/packages](catalog/packages) by
+`go run ./tools/catalog`. Each package folder keeps the upstream licence files
+and a `CONMESH-CHANGES.md` that names the source commit and lists ConMesh's
+changes. Release notices include each pack's licence texts.
+
+| Pack | Author | Licence | Source |
+|---|---|---|---|
+| Caveman | Julius Brussee | Apache-2.0 (with NOTICE and the MIT text for earlier contributions) | [juliusbrussee/caveman](https://github.com/juliusbrussee/caveman) |
+| Matt Pocock skills | Matt Pocock | MIT | [mattpocock/skills](https://github.com/mattpocock/skills) |
+| ECC agents and skills | Affaan Mustafa | MIT | [affaan-m/ecc](https://github.com/affaan-m/ecc) |
+
+Their authors maintain this content and are responsible for it; see
+[Third-party agents and skills](README.md#third-party-agents-and-skills).
+
+No embedding model weights are bundled. A user-supplied model or package has
+its own separate license and provenance requirements.

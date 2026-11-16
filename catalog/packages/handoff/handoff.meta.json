@@ -1,0 +1,16 @@
+{
+  "index": {
+    "description": "Compact the current conversation into a handoff document for another agent to pick up.",
+    "title": "Handoff",
+    "type": "skill"
+  },
+  "pack": "mattpocock-skills",
+  "requires": [],
+  "upstream": {
+    "author": "Matt Pocock",
+    "commit": "5863806dd4e15c63174bee4e7515a4256792ecfa",
+    "license": "MIT",
+    "path": "skills/productivity/handoff",
+    "repository": "https://github.com/mattpocock/skills"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "index": {
+    "description": "Build and TypeScript error resolution specialist. Use PROACTIVELY when build fails or type errors occur. Fixes build/type errors only with minimal diffs, no architectural edits. Focuses on getting th…",
+    "title": "Build error resolver",
+    "type": "agent"
+  },
+  "pack": "ecc-build-test",
+  "requires": [
+    "tdd-guide"
+  ],
+  "upstream": {
+    "author": "Affaan Mustafa (ECC)",
+    "commit": "d2ef2680594f9a17526a6e1a2e18b3d242c5d17b",
+    "license": "MIT",
+    "path": "agents/build-error-resolver.md",
+    "repository": "https://github.com/affaan-m/ecc"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "index": {
+    "description": "Deeply analyzes existing codebase features by tracing execution paths, mapping architecture layers, and documenting dependencies to inform new development.",
+    "title": "Code explorer",
+    "type": "agent"
+  },
+  "pack": "ecc-planning",
+  "requires": [],
+  "upstream": {
+    "author": "Affaan Mustafa (ECC)",
+    "commit": "d2ef2680594f9a17526a6e1a2e18b3d242c5d17b",
+    "license": "MIT",
+    "path": "agents/code-explorer.md",
+    "repository": "https://github.com/affaan-m/ecc"
+  }
+}

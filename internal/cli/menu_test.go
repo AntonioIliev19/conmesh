@@ -3,6 +3,7 @@ package cli
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -357,11 +358,21 @@ func TestMenuHelpReturnsToShell(t *testing.T) {
 	}
 }
 
-func TestMenuInstallsPredefinedPackageAndListsByKind(t *testing.T) {
-	catalog := []packages.CatalogEntry{
-		{ID: "angular-agent", Type: "agent", Version: "1.0.0", Title: "Angular Agent", Description: "Angular work", Source: "builtin:angular-agent"},
-		{ID: "dotnet-agent", Type: "agent", Version: "1.0.0", Title: ".NET Agent", Description: "C# work", Source: "builtin:dotnet-agent"},
+// testPacks uses real catalog IDs, because the menu resolves requirements
+// from the embedded catalog.
+func testPacks() []packages.Pack {
+	return []packages.Pack{
+		{ID: "conmesh-frameworks", Title: "ConMesh framework agents", Description: "Framework agents", CategoryTitle: "Languages and frameworks", Members: []packages.CatalogEntry{
+			{ID: "angular-agent", Type: "agent", Version: "1.0.0", Title: "Angular Agent", Description: "Angular work", Source: "builtin:angular-agent"},
+			{ID: "dotnet-agent", Type: "agent", Version: "1.0.0", Title: ".NET Agent", Description: "C# work", Source: "builtin:dotnet-agent"},
+		}},
+		{ID: "caveman", Title: "Caveman", Description: "Terse output", CategoryTitle: "Token saving", ThirdParty: true, Author: "Julius Brussee", License: "Apache-2.0", Members: []packages.CatalogEntry{
+			{ID: "caveman", Type: "skill", Version: "1", Title: "Caveman", Description: "Terse voice", Source: "builtin:caveman"},
+		}},
 	}
+}
+
+func TestMenuInstallsOneItemOfAPackAndListsByKind(t *testing.T) {
 	list := func(kind string) ([]packages.Item, error) {
 		if kind == "agent" {
 			return []packages.Item{{Entry: packages.Entry{ID: "dotnet-agent", Version: "1.0.0", Scope: "project", Source: "builtin:dotnet-agent"}, Effective: true}}, nil
@@ -370,11 +381,11 @@ func TestMenuInstallsPredefinedPackageAndListsByKind(t *testing.T) {
 	}
 	var out bytes.Buffer
 	var calls [][]string
-	// Install: second predefined item, project scope, Confirm. Then List, then quit.
-	input := moveTo(t, "install") + down + "\r" + "\r" + down + "\r" + moveTo(t, "list") + "q"
+	// Install: first pack, its second item, this project, Confirm. Then List, then quit.
+	input := moveTo(t, "install") + "" + down + down + "" + "" + down + "" + moveTo(t, "list") + "q"
 	if err := runMenu(strings.NewReader(input), &out, terminal{}, "dev", func(args []string) {
 		calls = append(calls, args)
-	}, menuUpdates{}, false, nil, menuInfo{packages: menuPackages{catalog: catalog, list: list}}); err != nil {
+	}, menuUpdates{}, false, nil, menuInfo{packages: menuPackages{packs: testPacks(), project: "/work/shop", list: list}}); err != nil {
 		t.Fatal(err)
 	}
 	want := [][]string{{"agent", "add", "builtin:dotnet-agent", "--project", "--trust"}}
@@ -382,8 +393,8 @@ func TestMenuInstallsPredefinedPackageAndListsByKind(t *testing.T) {
 		t.Fatalf("commands = %v, want %v", calls, want)
 	}
 	screen := out.String()
-	for _, text := range []string{"Predefined agents  shipped with ConMesh", "Angular Agent", "Folder or web URL",
-		"same as  conmesh agent add builtin:angular-agent --trust",
+	for _, text := range []string{"Languages and frameworks", "Token saving", "ConMesh framework agents", "Folder or web URL",
+		"same as  conmesh pack add conmesh-frameworks --trust", "Whole pack", "Or just one", "Only shop; saved in its .conmesh folder",
 		"Agents\n  dotnet-agent  1.0.0  project  predefined\n\nSkills\n  none installed\n\n"} {
 		if !strings.Contains(screen, text) {
 			t.Fatalf("screen missing %q:\n%s", text, screen)
@@ -394,19 +405,84 @@ func TestMenuInstallsPredefinedPackageAndListsByKind(t *testing.T) {
 	}
 }
 
-func TestMenuInstallOtherSourceUsesPackageFlow(t *testing.T) {
-	catalog := []packages.CatalogEntry{{ID: "angular-agent", Type: "agent", Version: "1.0.0", Title: "Angular Agent", Source: "builtin:angular-agent"}}
+func TestMenuInstallsWholeThirdPartyPackGlobally(t *testing.T) {
+	var out bytes.Buffer
 	var calls [][]string
-	// Other source -> skill -> local folder -> project -> Confirm.
-	input := moveTo(t, "install") + down + "\r" + down + "\r" + "C:/pkgs/review\r" + "\r" + down + "\r" + "q"
+	// Install: second pack, whole pack, all projects, Confirm.
+	input := moveTo(t, "install") + down + "" + "" + down + "" + down + "" + "q"
+	if err := runMenu(strings.NewReader(input), &out, terminal{}, "dev", func(args []string) {
+		calls = append(calls, args)
+	}, menuUpdates{}, false, nil, menuInfo{packages: menuPackages{packs: testPacks()}}); err != nil {
+		t.Fatal(err)
+	}
+	want := [][]string{{"pack", "add", "caveman", "--global", "--trust"}}
+	if !reflect.DeepEqual(calls, want) {
+		t.Fatalf("commands = %v, want %v", calls, want)
+	}
+	screen := out.String()
+	for _, text := range []string{"Installs 3 packages for all your projects", "call by name", "third-party content by Julius Brussee", "Needs a ConMesh project here"} {
+		if !strings.Contains(screen, text) {
+			t.Fatalf("screen missing %q:\n%s", text, screen)
+		}
+	}
+}
+
+func TestMenuInstallOtherSourceUsesPackageFlow(t *testing.T) {
+	var calls [][]string
+	// Other source (after both packs) -> skill -> local folder -> project -> Confirm.
+	input := moveTo(t, "install") + down + down + "" + down + "" + "C:/pkgs/review" + "" + down + "" + "q"
 	if err := runMenu(strings.NewReader(input), &bytes.Buffer{}, terminal{}, "dev", func(args []string) {
 		calls = append(calls, args)
-	}, menuUpdates{}, false, nil, menuInfo{packages: menuPackages{catalog: catalog}}); err != nil {
+	}, menuUpdates{}, false, nil, menuInfo{packages: menuPackages{packs: testPacks()}}); err != nil {
 		t.Fatal(err)
 	}
 	want := [][]string{{"skill", "add", "C:/pkgs/review", "--project", "--trust"}}
 	if !reflect.DeepEqual(calls, want) {
 		t.Fatalf("commands = %v, want %v", calls, want)
+	}
+}
+
+// A list taller than the terminal scrolls, so the redraw never moves the
+// cursor above the top of the screen.
+func TestPickerScrollsToFitTheScreen(t *testing.T) {
+	var options []menuOption
+	for i := 0; i < 40; i++ {
+		options = append(options, menuOption{group: "Pack", name: fmt.Sprintf("item-%02d", i), description: "something", sameAs: []string{"conmesh pack add x --trust"}})
+	}
+	for _, selected := range []int{0, 20, 39} {
+		frame := renderWindow(terminal{}, 80, 15, options, selected)
+		if lines := strings.Count(frame, "\n"); lines > 15 {
+			t.Fatalf("selected %d: %d lines for a 15-row screen", selected, lines)
+		}
+		if !strings.Contains(frame, fmt.Sprintf("> item-%02d", selected)) || !strings.Contains(frame, "more") {
+			t.Fatalf("selected %d not shown with scroll hint:\n%s", selected, frame)
+		}
+	}
+	if full := renderWindow(terminal{}, 80, 0, options, 3); strings.Contains(full, "more") {
+		t.Fatal("unknown height must draw the whole list")
+	}
+}
+
+func TestInstallAsksForScopeOnlyWhenMissing(t *testing.T) {
+	for args, want := range map[string]bool{
+		"skill add builtin:tdd --trust":           true,
+		"pack add caveman --trust":                true,
+		"agent add x --trust --global":            false,
+		"pack add caveman --project --trust":      false,
+		"skill list":                              false,
+		"package update tdd --type skill --trust": false,
+	} {
+		if got := needsScope(strings.Fields(args)); got != want {
+			t.Fatalf("needsScope(%q) = %v", args, got)
+		}
+	}
+	var out bytes.Buffer
+	scope, err := askScope(strings.NewReader(down+""), &out, terminal{}, 80, 0, nil, "")
+	if err != nil || scope != "global" || !strings.Contains(out.String(), "Install for which projects?") {
+		t.Fatalf("scope %q, err %v, screen:\n%s", scope, err, out.String())
+	}
+	if _, err := askScope(strings.NewReader(""), &out, terminal{}, 80, 0, nil, "/p"); err != errScopeCancelled {
+		t.Fatalf("escape: %v", err)
 	}
 }
 

@@ -1,0 +1,19 @@
+{
+  "index": {
+    "description": "Terse caveman voice: answer first, fluff gone, every technical fact kept. Use for /conmesh-caveman, \"caveman mode\", \"talk like caveman\", \"be brief\", \"less tokens\". Stays on until \"stop caveman\" or \"n…",
+    "title": "Caveman",
+    "type": "skill"
+  },
+  "pack": "caveman",
+  "requires": [
+    "megacave",
+    "ultracave"
+  ],
+  "upstream": {
+    "author": "Julius Brussee",
+    "commit": "9b243662ff98d392bc0a95b865a554583d71be75",
+    "license": "Apache-2.0",
+    "path": "skills/caveman",
+    "repository": "https://github.com/juliusbrussee/caveman"
+  }
+}

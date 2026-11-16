@@ -1,0 +1,19 @@
+{
+  "index": {
+    "description": "Implement a piece of work based on a spec or set of tickets.",
+    "title": "Implement",
+    "type": "skill"
+  },
+  "pack": "mattpocock-skills",
+  "requires": [
+    "code-review",
+    "tdd"
+  ],
+  "upstream": {
+    "author": "Matt Pocock",
+    "commit": "5863806dd4e15c63174bee4e7515a4256792ecfa",
+    "license": "MIT",
+    "path": "skills/engineering/implement",
+    "repository": "https://github.com/mattpocock/skills"
+  }
+}

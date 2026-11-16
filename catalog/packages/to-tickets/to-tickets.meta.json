@@ -1,0 +1,18 @@
+{
+  "index": {
+    "description": "Break a plan, spec, or the current conversation into a set of tracer-bullet tickets, each declaring its blocking edges, published to the configured tracker (edges as text in one file per ticket local…",
+    "title": "To tickets",
+    "type": "skill"
+  },
+  "pack": "mattpocock-skills",
+  "requires": [
+    "setup-matt-pocock-skills"
+  ],
+  "upstream": {
+    "author": "Matt Pocock",
+    "commit": "5863806dd4e15c63174bee4e7515a4256792ecfa",
+    "license": "MIT",
+    "path": "skills/engineering/to-tickets",
+    "repository": "https://github.com/mattpocock/skills"
+  }
+}

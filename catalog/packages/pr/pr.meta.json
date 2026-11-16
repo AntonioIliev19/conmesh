@@ -1,0 +1,16 @@
+{
+  "index": {
+    "description": "Use when writing a PR body.",
+    "title": "PR description",
+    "type": "skill"
+  },
+  "pack": "mattpocock-skills",
+  "requires": [],
+  "upstream": {
+    "author": "Matt Pocock",
+    "commit": "5863806dd4e15c63174bee4e7515a4256792ecfa",
+    "license": "MIT",
+    "path": "skills/engineering/pr",
+    "repository": "https://github.com/mattpocock/skills"
+  }
+}

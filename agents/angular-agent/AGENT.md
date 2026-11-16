@@ -1,3 +1,7 @@
+---
+name: angular-agent
+description: "Angular specialist. Use for Angular features, fixes and reviews in an existing workspace: specify the behaviour, follow the repository's patterns, add focused tests and verify the build targets."
+---
 # Angular Agent
 
 Deliver Angular features and fixes in established codebases using a written behavior specification, focused tests, and repository evidence.

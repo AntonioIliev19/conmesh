@@ -1,0 +1,18 @@
+{
+  "index": {
+    "description": "A relentless interview to sharpen a plan or design.",
+    "title": "Grill me",
+    "type": "skill"
+  },
+  "pack": "mattpocock-skills",
+  "requires": [
+    "grilling"
+  ],
+  "upstream": {
+    "author": "Matt Pocock",
+    "commit": "5863806dd4e15c63174bee4e7515a4256792ecfa",
+    "license": "MIT",
+    "path": "skills/productivity/grill-me",
+    "repository": "https://github.com/mattpocock/skills"
+  }
+}

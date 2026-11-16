@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"regexp"
 	"strings"
 	"unicode/utf8"
 
@@ -54,13 +55,14 @@ func entrypoint(p packages.Exported) (name, description, body string, err error)
 	body = string(data)
 	name = portableName(p.Entry.ID)
 	description = "CONMESH installed agent " + p.Entry.ID
-	if p.Entry.Type == "agent" {
+	normalized := strings.ReplaceAll(body, "\r\n", "\n")
+	if p.Entry.Type == "agent" && !strings.HasPrefix(normalized, "---\n") {
+		// An agent without frontmatter is all instructions.
 		if strings.TrimSpace(body) == "" {
 			err = ErrPackage
 		}
 		return
 	}
-	normalized := strings.ReplaceAll(body, "\r\n", "\n")
 	if !strings.HasPrefix(normalized, "---\n") {
 		err = ErrPackage
 		return
@@ -87,14 +89,22 @@ func entrypoint(p packages.Exported) (name, description, body string, err error)
 		return
 	}
 	description, ok = meta["description"].(string)
-	if !ok || strings.TrimSpace(description) == "" || len(description) > 1024 || strings.ContainsAny(description, "\x00\r\n") {
+	if !ok || !singleLine(description, 1024) {
 		err = ErrPackage
 		return
 	}
-	// Prevent packages from silently enabling hooks, subagents, or inline MCP.
-	// The portable subset is deliberately instruction-only; supporting files remain available.
-	if len(meta) != 2 {
-		err = ErrPackage
+	// Prevent packages from silently enabling hooks, tool grants or inline MCP.
+	// The portable subset is deliberately instruction-only; supporting files
+	// remain available. Optional keys can only describe or narrow behaviour.
+	for key, value := range meta {
+		if !optionalKeyOK(p.Entry.Type, key, value) {
+			err = ErrPackage
+			return
+		}
+	}
+	if p.Entry.Type == "agent" {
+		// Agent frontmatter is rebuilt per harness by renderPackages.
+		body = rest
 		return
 	}
 	meta["name"] = name
@@ -107,13 +117,84 @@ func entrypoint(p packages.Exported) (name, description, body string, err error)
 	return
 }
 
-func renderPackages(h string, all []packages.Exported) (map[string][]byte, error) {
+// agentModels are the Claude Code model aliases an agent may ask for.
+var agentModels = map[string]bool{"inherit": true, "sonnet": true, "opus": true, "haiku": true}
+
+// agentTools is a Claude Code tool allowlist such as "Read, Grep, Glob, Bash".
+var agentTools = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9_]*(, ?[A-Za-z][A-Za-z0-9_]*)*$`)
+
+func singleLine(s string, max int) bool {
+	return strings.TrimSpace(s) != "" && len(s) <= max && !strings.ContainsAny(s, "\x00\r\n")
+}
+
+// optionalKeyOK accepts the frontmatter keys ConMesh publishes. "tools" only
+// narrows what an agent may use; it never grants a tool the user has not allowed.
+func optionalKeyOK(kind, key string, value any) bool {
+	switch key {
+	case "name", "description":
+		return true
+	}
+	if kind == "skill" {
+		switch key {
+		case "argument-hint":
+			s, ok := value.(string)
+			return ok && singleLine(s, 256)
+		case "disable-model-invocation":
+			_, ok := value.(bool)
+			return ok
+		}
+		return false
+	}
+	switch key {
+	case "model":
+		s, ok := value.(string)
+		return ok && agentModels[s]
+	case "tools":
+		s, ok := value.(string)
+		return ok && len(s) <= 512 && agentTools.MatchString(s)
+	}
+	return false
+}
+
+// agentFront returns an agent's optional model and tools frontmatter.
+func agentFront(data []byte) (model, tools string) {
+	normalized := strings.ReplaceAll(string(data), "\r\n", "\n")
+	front, _, ok := strings.Cut(strings.TrimPrefix(normalized, "---\n"), "\n---\n")
+	if !ok || !strings.HasPrefix(normalized, "---\n") {
+		return "", ""
+	}
+	var meta struct {
+		Model string `yaml:"model"`
+		Tools string `yaml:"tools"`
+	}
+	_ = yaml.Unmarshal([]byte(front), &meta)
+	return meta.Model, meta.Tools
+}
+
+// indexTools are the CONMESH MCP tools as Claude Code names them.
+var indexTools = []string{"mcp__conmesh__conmesh_search_codebase", "mcp__conmesh__conmesh_find_symbol", "mcp__conmesh__conmesh_find_reference_candidates", "mcp__conmesh__conmesh_index_status"}
+
+// indexSection makes a published skill or agent use the project's ConMesh
+// index. It is added only to projects with indexing enabled.
+const indexSection = `
+
+## ConMesh code index
+
+This project has a ConMesh code index. When the task needs project code, query it before reading files broadly: ` + "`conmesh_find_symbol`" + ` for definitions, ` + "`conmesh_find_reference_candidates`" + ` for callers and uses (check them before changing a signature or deleting code), and ` + "`conmesh_search_codebase`" + ` for concepts and text. Then read only the files and lines the results point to. Reference results are lexical candidates, so confirm them in the source. If the CONMESH tools are unavailable, use normal file search.
+`
+
+// renderPackages publishes installed packages for one harness. With indexed
+// set, every skill and agent is told to use the project's ConMesh index.
+func renderPackages(h string, all []packages.Exported, indexed bool) (map[string][]byte, error) {
 	files := map[string][]byte{}
 	seen := map[string]bool{}
 	for _, p := range all {
 		name, description, body, err := entrypoint(p)
 		if err != nil {
 			return nil, err
+		}
+		if indexed {
+			body = strings.TrimRight(body, "\n") + indexSection
 		}
 		identity := p.Entry.Type + ":" + name
 		if seen[identity] {
@@ -122,8 +203,29 @@ func renderPackages(h string, all []packages.Exported) (map[string][]byte, error
 		seen[identity] = true
 		if p.Entry.Type == "agent" {
 			if h == "claude" {
-				front, _ := yaml.Marshal(map[string]string{"name": name, "description": description})
-				files[".claude/agents/"+name+".md"] = []byte("---\n" + string(front) + "---\n" + header + body)
+				var front yaml.Node
+				front.Kind = yaml.MappingNode
+				add := func(k, v string) {
+					front.Content = append(front.Content, &yaml.Node{Kind: yaml.ScalarNode, Value: k}, &yaml.Node{Kind: yaml.ScalarNode, Value: v})
+				}
+				add("name", name)
+				add("description", description)
+				model, tools := agentFront(p.Files["AGENT.md"])
+				if model != "" {
+					add("model", model)
+				}
+				if tools != "" {
+					if indexed {
+						// An agent limited to some tools still needs the index.
+						tools += ", " + strings.Join(indexTools, ", ")
+					}
+					add("tools", tools)
+				}
+				encoded, err := yaml.Marshal(&front)
+				if err != nil {
+					return nil, ErrPackage
+				}
+				files[".claude/agents/"+name+".md"] = []byte("---\n" + string(encoded) + "---\n" + header + body)
 			} else {
 				data, err := toml.Marshal(map[string]string{"name": name, "description": description, "developer_instructions": strings.TrimSpace(header + body)})
 				if err != nil {

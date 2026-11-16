@@ -1,0 +1,20 @@
+{
+  "index": {
+    "description": "Scan a codebase for deepening opportunities, present them as a visual HTML report, then grill through whichever one you pick.",
+    "title": "Improve codebase architecture",
+    "type": "skill"
+  },
+  "pack": "mattpocock-skills",
+  "requires": [
+    "codebase-design",
+    "domain-modeling",
+    "grilling"
+  ],
+  "upstream": {
+    "author": "Matt Pocock",
+    "commit": "5863806dd4e15c63174bee4e7515a4256792ecfa",
+    "license": "MIT",
+    "path": "skills/engineering/improve-codebase-architecture",
+    "repository": "https://github.com/mattpocock/skills"
+  }
+}

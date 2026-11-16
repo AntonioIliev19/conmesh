@@ -1,0 +1,16 @@
+{
+  "index": {
+    "description": "Test-Driven Development specialist enforcing write-tests-first methodology. Use PROACTIVELY when writing new features, fixing bugs, or refactoring code. Ensures 80%+ test coverage.",
+    "title": "Tdd guide",
+    "type": "agent"
+  },
+  "pack": "ecc-build-test",
+  "requires": [],
+  "upstream": {
+    "author": "Affaan Mustafa (ECC)",
+    "commit": "d2ef2680594f9a17526a6e1a2e18b3d242c5d17b",
+    "license": "MIT",
+    "path": "agents/tdd-guide.md",
+    "repository": "https://github.com/affaan-m/ecc"
+  }
+}

@@ -23,8 +23,16 @@ func TestCatalogListsEmbeddedPackages(t *testing.T) {
 			t.Fatalf("catalog entry %s = %+v", id, e)
 		}
 	}
-	if skills, err := Catalog("skill"); err != nil || len(skills) != 0 {
-		t.Fatal("unexpected predefined skills", skills, err)
+	skills, err := Catalog("skill")
+	if err != nil {
+		t.Fatal(err)
+	}
+	found := map[string]CatalogEntry{}
+	for _, e := range skills {
+		found[e.ID] = e
+	}
+	if found["code-search"].Source != BuiltinPrefix+"code-search" || found["caveman"].Type != "skill" || len(found["grill-me"].Requires) != 1 {
+		t.Fatalf("predefined skills %+v", found)
 	}
 	if _, err := Catalog("bogus"); err == nil {
 		t.Fatal("invalid kind accepted")

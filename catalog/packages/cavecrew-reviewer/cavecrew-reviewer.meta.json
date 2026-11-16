@@ -1,0 +1,16 @@
+{
+  "index": {
+    "description": "Diff/branch/file reviewer. One line per finding, severity-tagged, no praise, no scope creep. Output format `path:line: \u003cemoji\u003e \u003cseverity\u003e: \u003cproblem\u003e. \u003cfix\u003e.` Use for \"review this PR\", \"review my diff…",
+    "title": "Cavecrew reviewer",
+    "type": "agent"
+  },
+  "pack": "caveman",
+  "requires": [],
+  "upstream": {
+    "author": "Julius Brussee",
+    "commit": "9b243662ff98d392bc0a95b865a554583d71be75",
+    "license": "Apache-2.0",
+    "path": "agents/cavecrew-reviewer.md",
+    "repository": "https://github.com/juliusbrussee/caveman"
+  }
+}

@@ -480,7 +480,7 @@ func TestNormalizedNameCollisionFailsClosed(t *testing.T) {
 	for _, id := range []string{first, second} {
 		all = append(all, packages.Exported{Entry: packages.Entry{ID: id, Type: "skill"}, Files: map[string][]byte{"SKILL.md": []byte("---\nname: " + id + "\ndescription: Review source.\n---\nInstructions.\n")}})
 	}
-	if _, err := renderPackages("codex", all); !errors.Is(err, ErrConflict) {
+	if _, err := renderPackages("codex", all, false); !errors.Is(err, ErrConflict) {
 		t.Fatal("normalization silently replaced a package", err)
 	}
 }
@@ -488,7 +488,7 @@ func TestNormalizedNameCollisionFailsClosed(t *testing.T) {
 func TestPortableSkillsRejectAutoloadCapabilities(t *testing.T) {
 	for _, name := range []string{".claude-plugin/plugin.json", ".codex-plugin/plugin.json", "agents/openai.yaml", "Agents/OpenAI.yaml", ".Claude-Plugin/plugin.json", ".Codex-Plugin/plugin.json"} {
 		exported := packages.Exported{Entry: packages.Entry{ID: "review", Type: "skill"}, Files: map[string][]byte{"SKILL.md": []byte(skill), name: []byte("{}")}}
-		if _, err := renderPackages("claude", []packages.Exported{exported}); !errors.Is(err, ErrPackage) {
+		if _, err := renderPackages("claude", []packages.Exported{exported}, false); !errors.Is(err, ErrPackage) {
 			t.Fatalf("autoload capability copied: %s", name)
 		}
 	}

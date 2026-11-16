@@ -1,0 +1,16 @@
+{
+  "index": {
+    "description": "Expert Go code reviewer specializing in idiomatic Go, concurrency patterns, error handling, and performance. Use for all Go code changes. MUST BE USED for Go projects.",
+    "title": "Go reviewer",
+    "type": "agent"
+  },
+  "pack": "ecc-language-reviewers",
+  "requires": [],
+  "upstream": {
+    "author": "Affaan Mustafa (ECC)",
+    "commit": "d2ef2680594f9a17526a6e1a2e18b3d242c5d17b",
+    "license": "MIT",
+    "path": "agents/go-reviewer.md",
+    "repository": "https://github.com/affaan-m/ecc"
+  }
+}

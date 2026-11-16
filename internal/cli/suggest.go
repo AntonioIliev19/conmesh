@@ -11,7 +11,7 @@ import (
 // break ties between equally close suggestions.
 var commandNames = []string{
 	"menu", "help", "doctor", "update", "init", "status", "index", "search", "symbol",
-	"references", "research-skill", "knowledge", "mcp", "sync", "agent", "skill", "package",
+	"references", "research-skill", "knowledge", "mcp", "sync", "agent", "skill", "package", "pack",
 }
 
 func knownCommand(name string) bool {

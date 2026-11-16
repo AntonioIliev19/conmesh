@@ -1,0 +1,16 @@
+{
+  "index": {
+    "description": "Expert Java code reviewer for Spring Boot and Quarkus projects. Automatically detects the framework and applies the appropriate review rules. Covers layered architecture, JPA/Panache, MongoDB, securi…",
+    "title": "Java reviewer",
+    "type": "agent"
+  },
+  "pack": "ecc-language-reviewers",
+  "requires": [],
+  "upstream": {
+    "author": "Affaan Mustafa (ECC)",
+    "commit": "d2ef2680594f9a17526a6e1a2e18b3d242c5d17b",
+    "license": "MIT",
+    "path": "agents/java-reviewer.md",
+    "repository": "https://github.com/affaan-m/ecc"
+  }
+}

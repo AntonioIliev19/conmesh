@@ -46,6 +46,15 @@ func terminalMenuMode(input *os.File) func() (func() error, error) {
 	}
 }
 
+// terminalHeight is the number of rows, or 0 when unknown.
+func terminalHeight(f *os.File) int {
+	_, height, err := term.GetSize(int(f.Fd()))
+	if err != nil {
+		return 0
+	}
+	return height
+}
+
 func terminalWidth(f *os.File) int {
 	width, _, err := term.GetSize(int(f.Fd()))
 	if err != nil {
@@ -54,7 +63,7 @@ func terminalWidth(f *os.File) int {
 	return width
 }
 
-func pickMenu(input *bufio.Reader, out io.Writer, t terminal, width int, title string, options []menuOption, raw func() (func() error, error)) (choice int, err error) {
+func pickMenu(input *bufio.Reader, out io.Writer, t terminal, width, height int, title string, options []menuOption, raw func() (func() error, error)) (choice int, err error) {
 	if raw != nil {
 		restore, err := raw()
 		if err != nil {
@@ -75,7 +84,7 @@ func pickMenu(input *bufio.Reader, out io.Writer, t terminal, width int, title s
 		if drawn > 0 {
 			fmt.Fprintf(&frame, "\x1b[%dA\r\x1b[J", drawn)
 		}
-		body := renderPicker(t, width, options, selected)
+		body := renderWindow(t, width, height-strings.Count(title, "\n")-1, options, selected)
 		frame.WriteString(body)
 		if _, err := io.WriteString(out, frame.String()); err != nil {
 			return -1, err
@@ -104,6 +113,38 @@ func pickMenu(input *bufio.Reader, out io.Writer, t terminal, width int, title s
 				continue
 			}
 			break
+		}
+	}
+}
+
+// renderWindow draws the picker, scrolled to keep the selection visible when
+// the whole list would not fit in height rows (0 means unknown: draw it all).
+// The redraw moves the cursor up by the drawn line count, so the frame must
+// never be taller than the screen.
+func renderWindow(t terminal, width, height int, options []menuOption, selected int) string {
+	full := renderPicker(t, width, options, selected)
+	if height <= 0 || strings.Count(full, "\n") <= height {
+		return full
+	}
+	frame := func(lo, hi int) string {
+		above, below := lo, len(options)-hi
+		g := glyphsFor(t)
+		hint := fmt.Sprintf("  %s %d more   %s %d more", g.up, above, g.down, below)
+		return t.paint(styleDim, clip(hint, max(1, width-1))) + "\n" + renderPicker(t, width, options[lo:hi], selected-lo)
+	}
+	lo, hi := selected, selected+1
+	for {
+		grew := false
+		if hi < len(options) && strings.Count(frame(lo, hi+1), "\n") <= height {
+			hi++
+			grew = true
+		}
+		if lo > 0 && strings.Count(frame(lo-1, hi), "\n") <= height {
+			lo--
+			grew = true
+		}
+		if !grew {
+			return frame(lo, hi)
 		}
 	}
 }

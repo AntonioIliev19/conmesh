@@ -1,0 +1,15 @@
+{
+  "category": "code-aware",
+  "languageKey": "agnostic",
+  "index": {
+    "title": "Code search",
+    "slug": "code-search",
+    "description": "Find definitions, uses and behaviour through the ConMesh index, reading only the files it points to.",
+    "type": "skill",
+    "tags": [
+      "conmesh",
+      "index",
+      "tokens"
+    ]
+  }
+}

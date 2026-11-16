@@ -362,7 +362,7 @@ func writeJSON(root *os.Root, name string, value any) error {
 	return nil
 }
 
-func (m *Manager) commit(root *os.Root, scope string, entries []Entry, replace *snapshot, remove string) error {
+func (m *Manager) commit(root *os.Root, scope string, entries []Entry, replace []snapshot, remove string) error {
 	stage, err := os.MkdirTemp(root.Name(), ".packages-stage-")
 	if err != nil {
 		return errors.New("cannot create package transaction")
@@ -374,10 +374,14 @@ func (m *Manager) commit(root *os.Root, scope string, entries []Entry, replace *
 		return security.ErrDenied
 	}
 	defer r.Close()
-	next := make([]Entry, 0, len(entries)+1)
+	next := make([]Entry, 0, len(entries)+len(replace))
 	totalBytes := 0
+	replaced := map[string]bool{}
+	for _, s := range replace {
+		replaced[key(s.manifest.Type, s.manifest.ID)] = true
+	}
 	for _, e := range entries {
-		if key(e.Type, e.ID) == remove || (replace != nil && e.Type == replace.manifest.Type && e.ID == replace.manifest.ID) {
+		if key(e.Type, e.ID) == remove || replaced[key(e.Type, e.ID)] {
 			continue
 		}
 		files, err := readTree(root, "packages/"+packagePath(e.Type, e.ID), MaxPackageBytes)
@@ -395,12 +399,12 @@ func (m *Manager) commit(root *os.Root, scope string, entries []Entry, replace *
 		}
 		next = append(next, e)
 	}
-	if replace != nil {
-		for _, data := range replace.files {
+	for _, s := range replace {
+		for _, data := range s.files {
 			totalBytes += len(data)
 		}
-		e := entryFromSnapshot(*replace, scope)
-		if err := writeTree(r, packagePath(e.Type, e.ID), replace.files); err != nil {
+		e := entryFromSnapshot(s, scope)
+		if err := writeTree(r, packagePath(e.Type, e.ID), s.files); err != nil {
 			return err
 		}
 		next = append(next, e)
@@ -546,22 +550,7 @@ func (m *Manager) install(ctx context.Context, kind, id, source, ref, scope stri
 			ref = previous.Ref
 		}
 	}
-	var s snapshot
-	if _, ok := builtinID(source); ok {
-		// Predefined packages carry their own version; a ref is only a check.
-		s, err = loadBuiltin(ctx, source, kind, ref)
-		s.ref = ""
-	} else {
-		canonical, isGit, cerr := canonicalSource(source)
-		if cerr != nil {
-			return Result{}, cerr
-		}
-		if isGit {
-			s, err = loadGit(ctx, canonical, kind, ref, m.git)
-		} else {
-			s, err = loadLocal(ctx, canonical, kind, ref)
-		}
-	}
+	s, err := m.load(ctx, kind, source, ref)
 	if err != nil {
 		return Result{}, err
 	}
@@ -583,10 +572,108 @@ func (m *Manager) install(ctx context.Context, kind, id, source, ref, scope stri
 			return Result{}, errors.New("package source identity changed")
 		}
 	}
-	if err := m.commit(r, scope, entries, &s, ""); err != nil {
+	if err := m.commit(r, scope, entries, []snapshot{s}, ""); err != nil {
 		return Result{}, err
 	}
 	return Result{Entry: next, Omitted: s.omitted}, nil
+}
+
+// Request names one package for AddAll.
+type Request struct {
+	Kind   string
+	Source string
+}
+
+// AddAll installs several packages in one transaction, such as a catalog
+// pack: either all of them are added or the store is left unchanged. Packages
+// already installed from the same source and content are reported unchanged.
+func (m *Manager) AddAll(ctx context.Context, requests []Request, scope string, trusted bool) ([]Result, error) {
+	if !trusted {
+		return nil, errors.New("package instructions and license require review; pass --trust after review")
+	}
+	if len(requests) == 0 {
+		return nil, nil
+	}
+	for _, q := range requests {
+		if !validKind(q.Kind) {
+			return nil, security.ErrDenied
+		}
+	}
+	base, err := m.base(scope)
+	if err != nil {
+		return nil, err
+	}
+	r, err := openBase(base, true)
+	if err != nil {
+		return nil, security.ErrDenied
+	}
+	defer r.Close()
+	release, err := acquire(r)
+	if err != nil {
+		return nil, err
+	}
+	defer release()
+	entries, err := loadState(r, scope)
+	if err != nil {
+		return nil, err
+	}
+	results := make([]Result, 0, len(requests))
+	var changed []snapshot
+	seen := map[string]bool{}
+	for _, q := range requests {
+		s, err := m.load(ctx, q.Kind, q.Source, "")
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", q.Source, err)
+		}
+		next := entryFromSnapshot(s, scope)
+		k := key(next.Type, next.ID)
+		if seen[k] {
+			continue
+		}
+		seen[k] = true
+		unchanged := false
+		for _, e := range entries {
+			if e.Type != next.Type || e.ID != next.ID {
+				continue
+			}
+			if e == next {
+				unchanged = true
+				break
+			}
+			// Content changed (for example a newer ConMesh) or another source uses the ID.
+			if e.Source != next.Source {
+				return nil, fmt.Errorf("%s %s is already installed from another source; remove it first or keep it", next.Type, next.ID)
+			}
+		}
+		results = append(results, Result{Entry: next, Unchanged: unchanged, Omitted: s.omitted})
+		if !unchanged {
+			changed = append(changed, s)
+		}
+	}
+	if len(changed) > 0 {
+		if err := m.commit(r, scope, entries, changed, ""); err != nil {
+			return nil, err
+		}
+	}
+	return results, nil
+}
+
+// load reads one package source without touching the store.
+func (m *Manager) load(ctx context.Context, kind, source, ref string) (snapshot, error) {
+	if _, ok := builtinID(source); ok {
+		// Predefined packages carry their own version; a ref is only a check.
+		s, err := loadBuiltin(ctx, source, kind, ref)
+		s.ref = ""
+		return s, err
+	}
+	canonical, isGit, err := canonicalSource(source)
+	if err != nil {
+		return snapshot{}, err
+	}
+	if isGit {
+		return loadGit(ctx, canonical, kind, ref, m.git)
+	}
+	return loadLocal(ctx, canonical, kind, ref)
 }
 
 func (m *Manager) Update(ctx context.Context, kind, id, ref, scope string, trusted bool) (Result, error) {

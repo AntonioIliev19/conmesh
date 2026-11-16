@@ -1,0 +1,16 @@
+{
+  "index": {
+    "description": "Software architecture specialist for system design, scalability, and technical decision-making. Use PROACTIVELY when planning new features, refactoring large systems, or making architectural decision…",
+    "title": "Architect",
+    "type": "agent"
+  },
+  "pack": "ecc-planning",
+  "requires": [],
+  "upstream": {
+    "author": "Affaan Mustafa (ECC)",
+    "commit": "d2ef2680594f9a17526a6e1a2e18b3d242c5d17b",
+    "license": "MIT",
+    "path": "agents/architect.md",
+    "repository": "https://github.com/affaan-m/ecc"
+  }
+}

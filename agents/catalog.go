@@ -8,5 +8,5 @@ import "embed"
 // FS holds one directory per predefined package. Add a new package directory
 // to this list as well; a test fails when a package directory is missing.
 //
-//go:embed angular-agent dotnet-agent repository-research
+//go:embed angular-agent change-impact code-search dotnet-agent repository-research
 var FS embed.FS

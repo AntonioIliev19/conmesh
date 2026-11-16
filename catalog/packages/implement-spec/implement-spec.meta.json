@@ -1,0 +1,22 @@
+{
+  "index": {
+    "description": "Implement the result of /conmesh-to-spec and /conmesh-to-tickets in code.",
+    "title": "Implement spec",
+    "type": "skill"
+  },
+  "pack": "mattpocock-skills",
+  "requires": [
+    "code-review",
+    "setup-matt-pocock-skills",
+    "tdd",
+    "to-spec",
+    "to-tickets"
+  ],
+  "upstream": {
+    "author": "Matt Pocock",
+    "commit": "5863806dd4e15c63174bee4e7515a4256792ecfa",
+    "license": "MIT",
+    "path": "skills/engineering/implement-spec",
+    "repository": "https://github.com/mattpocock/skills"
+  }
+}
