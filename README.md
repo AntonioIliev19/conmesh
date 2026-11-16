@@ -258,32 +258,26 @@ conmesh pack list                     # every pack, by category
 conmesh pack show caveman             # what a pack installs
 conmesh pack add caveman --trust      # install it
 conmesh skill add builtin:tdd --trust # or a single skill (agent add for agents)
-conmesh sync --trust                  # publish to Claude Code, Codex and the rest
+conmesh sync --trust                  # publish to Claude Code and Codex
 ```
 
-In a terminal, `pack add`, `skill add` and `agent add` ask whether to install
-for **this project** or **all your projects** (global) unless you pass
-`--project` or `--global`. Global packages reach a project the next time you run
-`conmesh sync` in it. Scripts and `--no-input` default to the project.
+- **Install a pack or a single item:** `conmesh pack add <pack> --trust` or
+  `conmesh skill add builtin:<id> --trust` (`agent add` for agents). Items it
+  needs come along automatically.
+- **Choose where:** ConMesh asks whether to install for **this project** or
+  **all your projects** (global). Pass `--project` or `--global` to skip the
+  question.
+- **Publish to your AI tools:** run `conmesh sync --trust` in the project
+  (`--dry-run` previews it). Global installs reach each project on its next sync.
+- **Find them by name:** published skills and agents start with `conmesh-`, for
+  example `/conmesh-caveman` or the `conmesh-code-reviewer` agent.
+- **Turn on indexing for the full benefit:** with `conmesh init --index`, every
+  published skill and agent is told to find code through the ConMesh index.
+- **Review third-party packs before use:** Caveman, Matt Pocock and ECC content
+  is maintained by its authors.
 
-A single skill or agent brings the ones it calls by name, so `grill-with-docs`
-also installs `grilling` and `domain-modeling`. A pack installs in one step: if
-one of its packages cannot be installed, for example because you already have
-your own package with that ID, nothing is installed.
-
-Published skills and agents use ConMesh names, such as `/conmesh-tdd` or the
-`conmesh-code-reviewer` agent. ConMesh only ever writes files with its own
-prefix, so it never overwrites your files. References between the skills of a
-pack use the same names. When the project has indexing enabled, every published
-skill and agent also gets a short section telling it to find code through the
-ConMesh index (`conmesh_find_symbol`, `conmesh_find_reference_candidates`,
-`conmesh_search_codebase`) before reading files broadly. Agents that limit their
-tools are given the ConMesh index tools as well.
-
-The third-party packs are copies of exact upstream commits. Each package folder
-keeps the upstream licence files and a `CONMESH-CHANGES.md` that lists what
-ConMesh changed. Maintainers refresh them with `go run ./tools/catalog` after
-reviewing the new upstream commit; see [catalog/README.md](catalog/README.md).
+[PACKS.md](PACKS.md) explains how installs, sync, naming and code-aware
+publishing work in detail.
 
 ## Third-party agents and skills
 
