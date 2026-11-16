@@ -73,7 +73,7 @@ func TestAddAllIsAllOrNothing(t *testing.T) {
 	m := newManager(t)
 	ctx := context.Background()
 	// A user's own "tdd" skill from a folder occupies the ID.
-	dir := t.TempDir()
+	dir := physicalTemp(t)
 	files := map[string]string{
 		SourceManifest: `{"schema_version":1,"id":"tdd","type":"skill","version":"1","license":"MIT"}`,
 		"LICENSE":      "MIT",
