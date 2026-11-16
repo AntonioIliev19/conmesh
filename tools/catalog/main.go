@@ -230,7 +230,7 @@ func vendor(p pack) (map[string][]byte, error) {
 			if err != nil {
 				return nil, fmt.Errorf("notice %s: %w", notice, err)
 			}
-			files[notice] = data
+			files[notice] = lf(data)
 		}
 		entry := "SKILL.md"
 		if m.Type == "agent" {
@@ -279,7 +279,7 @@ func readMember(checkout string, m member) (map[string][]byte, []string, error) 
 		if err != nil {
 			return nil, nil, err
 		}
-		files["AGENT.md"] = data
+		files["AGENT.md"] = lf(data)
 	} else {
 		err := filepath.WalkDir(src, func(p string, d fs.DirEntry, err error) error {
 			if err != nil || d.IsDir() {
@@ -291,7 +291,7 @@ func readMember(checkout string, m member) (map[string][]byte, []string, error) 
 				return nil
 			}
 			data, err := os.ReadFile(p)
-			files[rel] = data
+			files[rel] = lf(data)
 			return err
 		})
 		if err != nil {
@@ -446,4 +446,10 @@ func changes(p pack, m member, dropped []string) []byte {
 func jsonBytes(v any) []byte {
 	data, _ := json.MarshalIndent(v, "", "  ")
 	return append(data, '\n')
+}
+
+// lf gives every vendored text file LF line endings whatever the local Git
+// settings did to the checkout, so every platform embeds the same bytes.
+func lf(data []byte) []byte {
+	return bytes.ReplaceAll(data, []byte("\r\n"), []byte("\n"))
 }
