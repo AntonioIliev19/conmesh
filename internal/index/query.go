@@ -2,7 +2,9 @@ package index
 
 import (
 	"context"
+	"database/sql"
 	"errors"
+	"os"
 	"strings"
 	"time"
 	"unicode"
@@ -77,21 +79,29 @@ func (c *Core) query(ctx context.Context, q Query, symbol bool) ([]Evidence, err
 		return nil, security.ErrDenied
 	}
 	defer root.Close()
-	var sqlText, term, mechanism string
 	if symbol {
-		term, mechanism = q.Text, "symbol"
-		sqlText = `SELECT substr(files.path,1,4097),substr(files.digest,1,65),symbols.start_line,symbols.end_line,symbols.name,substr(symbols.kind,1,65) FROM symbols JOIN files ON files.id=symbols.file_id WHERE symbols.name=? AND (?='' OR files.path=? OR substr(files.path,1,length(?)+1)=?||'/') ORDER BY files.path,symbols.start_line,symbols.end_line,symbols.kind LIMIT ?`
-	} else {
-		fields := strings.FieldsFunc(q.Text, func(r rune) bool { return !unicode.IsLetter(r) && !unicode.IsNumber(r) && r != '_' })
-		if len(fields) == 0 || len(fields) > 16 {
-			return nil, ErrQuery
-		}
-		for i := range fields {
-			fields[i] = `"` + fields[i] + `"`
-		}
-		term, mechanism = strings.Join(fields, " AND "), "fts5"
-		sqlText = `SELECT substr(files.path,1,4097),substr(files.digest,1,65),chunks.start_line,chunks.end_line,'','' FROM fts_chunks JOIN chunks ON chunks.id=fts_chunks.rowid JOIN files ON files.id=chunks.file_id WHERE fts_chunks MATCH ? AND (?='' OR files.path=? OR substr(files.path,1,length(?)+1)=?||'/') ORDER BY bm25(fts_chunks),files.path,chunks.start_line,chunks.end_line LIMIT ?`
+		sqlText := `SELECT substr(files.path,1,4097),substr(files.digest,1,65),symbols.start_line,symbols.end_line,symbols.name,substr(symbols.kind,1,65) FROM symbols JOIN files ON files.id=symbols.file_id WHERE symbols.name=? AND (?='' OR files.path=? OR substr(files.path,1,length(?)+1)=?||'/') ORDER BY files.path,symbols.start_line,symbols.end_line,symbols.kind LIMIT ?`
+		return c.collect(ctx, db, root, q, sqlText, q.Text, "symbol", true)
 	}
+	fields := strings.FieldsFunc(q.Text, func(r rune) bool { return !unicode.IsLetter(r) && !unicode.IsNumber(r) && r != '_' })
+	if len(fields) == 0 || len(fields) > 16 {
+		return nil, ErrQuery
+	}
+	for i := range fields {
+		fields[i] = `"` + fields[i] + `"`
+	}
+	sqlText := `SELECT substr(files.path,1,4097),substr(files.digest,1,65),chunks.start_line,chunks.end_line,'','' FROM fts_chunks JOIN chunks ON chunks.id=fts_chunks.rowid JOIN files ON files.id=chunks.file_id WHERE fts_chunks MATCH ? AND (?='' OR files.path=? OR substr(files.path,1,length(?)+1)=?||'/') ORDER BY bm25(fts_chunks),files.path,chunks.start_line,chunks.end_line LIMIT ?`
+	result, err := c.collect(ctx, db, root, q, sqlText, strings.Join(fields, " AND "), "fts5", false)
+	if err != nil || len(result) > 0 || len(fields) < 2 {
+		return result, err
+	}
+	// Agents describe code in their own words, so one word missing from the source would
+	// otherwise empty the result. Retry with any word matching, ranked by BM25 so chunks
+	// matching more (and rarer) words come first, and label the evidence so callers know.
+	return c.collect(ctx, db, root, q, sqlText, strings.Join(fields, " OR "), "fts5-any", false)
+}
+
+func (c *Core) collect(ctx context.Context, db *sql.DB, root *os.Root, q Query, sqlText, term, mechanism string, symbol bool) ([]Evidence, error) {
 	rows, err := db.QueryContext(ctx, sqlText, term, q.Scope, q.Scope, q.Scope, q.Scope, q.Limit)
 	if err != nil {
 		return nil, stateError(err)

@@ -143,6 +143,15 @@ func TestIncrementalReopenAndFreshness(t *testing.T) {
 	if err != nil || len(syms) != 1 {
 		t.Fatal("TypeScript symbols missing", err, syms)
 	}
+	if got := search(t, c, "sunflower greet"); len(got) != 1 || got[0].Path != "src/a.ts" || got[0].Mechanism != "fts5" {
+		t.Fatal("all-word match must win and keep its mechanism", got)
+	}
+	if got := search(t, c, "greet unbroken sunflower"); len(got) != 2 || got[0].Path != "src/a.ts" || got[0].Mechanism != "fts5-any" || got[1].Mechanism != "fts5-any" {
+		t.Fatal("any-word fallback must rank the chunk matching more words first", got)
+	}
+	if got := search(t, c, "unbroken"); len(got) != 0 {
+		t.Fatal("a single missing word must stay empty", got)
+	}
 	second := update(t, c)
 	if second.Indexed != 0 || second.Unchanged != p.Indexed {
 		t.Fatal("unchanged content was reparsed", second)
