@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 	"unicode"
@@ -34,6 +35,78 @@ type Evidence struct {
 	Name      string `json:"name,omitempty"`
 	Kind      string `json:"kind,omitempty"`
 	Truncated bool   `json:"truncated,omitempty"`
+}
+
+// CompactLines and CompactLineBytes bound a compacted snippet; snippets of at
+// most CompactKeepBytes are cheap enough to return whole.
+const CompactLines = 3
+const CompactLineBytes = 200
+const CompactKeepBytes = 1000
+
+func terms(text string) []string {
+	return strings.FieldsFunc(text, func(r rune) bool { return !unicode.IsLetter(r) && !unicode.IsNumber(r) && r != '_' })
+}
+
+// Compact replaces each snippet longer than CompactKeepBytes with at most
+// CompactLines of its lines, each prefixed with its line number: the lines
+// holding a query word, or the first non-blank lines when none does. Evidence keeps its
+// full line range, so a caller reads only the span it needs instead of paying
+// for every chunk up front. Truncated marks a snippet that lost lines.
+func Compact(evidence []Evidence, query string) []Evidence {
+	want := map[string]bool{}
+	for _, t := range terms(query) {
+		want[strings.ToLower(t)] = true
+	}
+	out := make([]Evidence, len(evidence))
+	for i, e := range evidence {
+		if len(e.Snippet) <= CompactKeepBytes {
+			out[i] = e
+			continue
+		}
+		lines := strings.Split(e.Snippet, "\n")
+		picked := []int{}
+		for pass := 0; pass < 2 && len(picked) == 0; pass++ {
+			for n, line := range lines {
+				if len(picked) == CompactLines {
+					break
+				}
+				if strings.TrimSpace(line) == "" {
+					continue
+				}
+				hit := false
+				for _, t := range terms(line) {
+					if want[strings.ToLower(t)] {
+						hit = true
+						break
+					}
+				}
+				if hit || pass == 1 {
+					picked = append(picked, n)
+				}
+			}
+		}
+		var b strings.Builder
+		cut := e.Truncated
+		for _, n := range picked {
+			line := strings.TrimSpace(lines[n])
+			if len(line) > CompactLineBytes {
+				line, cut = strings.ToValidUTF8(line[:CompactLineBytes], ""), true
+			}
+			if b.Len() > 0 {
+				b.WriteByte('\n')
+			}
+			b.WriteString(strconv.Itoa(e.StartLine+n) + ": " + line)
+		}
+		nonBlank := 0
+		for _, line := range lines {
+			if strings.TrimSpace(line) != "" {
+				nonBlank++
+			}
+		}
+		e.Snippet, e.Truncated = b.String(), cut || nonBlank > len(picked)
+		out[i] = e
+	}
+	return out
 }
 
 func validate(q Query) (Query, error) {
@@ -83,7 +156,7 @@ func (c *Core) query(ctx context.Context, q Query, symbol bool) ([]Evidence, err
 		sqlText := `SELECT substr(files.path,1,4097),substr(files.digest,1,65),symbols.start_line,symbols.end_line,symbols.name,substr(symbols.kind,1,65) FROM symbols JOIN files ON files.id=symbols.file_id WHERE symbols.name=? AND (?='' OR files.path=? OR substr(files.path,1,length(?)+1)=?||'/') ORDER BY files.path,symbols.start_line,symbols.end_line,symbols.kind LIMIT ?`
 		return c.collect(ctx, db, root, q, sqlText, q.Text, "symbol", true)
 	}
-	fields := strings.FieldsFunc(q.Text, func(r rune) bool { return !unicode.IsLetter(r) && !unicode.IsNumber(r) && r != '_' })
+	fields := terms(q.Text)
 	if len(fields) == 0 || len(fields) > 16 {
 		return nil, ErrQuery
 	}

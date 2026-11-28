@@ -25,6 +25,7 @@ type queryArgs struct {
 	Scope       string `json:"scope,omitempty"`
 	Limit       int    `json:"limit,omitempty"`
 	Semantic    bool   `json:"semantic,omitempty"`
+	Full        bool   `json:"full,omitempty"`
 	hasSemantic bool
 }
 type response struct {
@@ -74,6 +75,10 @@ func decodeArgs(raw []byte, status bool) (queryArgs, error) {
 			}
 		case "limit":
 			if json.Unmarshal(value, &args.Limit) != nil || args.Limit < 1 || args.Limit > index.MaxResults {
+				return args, index.ErrQuery
+			}
+		case "full":
+			if json.Unmarshal(value, &args.Full) != nil {
 				return args, index.ErrQuery
 			}
 		case "semantic":
@@ -170,13 +175,14 @@ func New(project, version string) (*sdk.Server, error) {
 	}
 	server := sdk.NewServer(&sdk.Implementation{Name: "conmesh", Version: version}, nil)
 	addKnowledgeTools(server, project)
-	schema := map[string]any{"type": "object", "additionalProperties": false, "required": []string{"query"}, "properties": map[string]any{"query": map[string]any{"type": "string", "minLength": 1, "maxLength": 256}, "scope": map[string]any{"type": "string", "maxLength": 4096}, "limit": map[string]any{"type": "integer", "minimum": 1, "maximum": 50}}}
+	full := map[string]any{"type": "boolean", "description": "Return long results whole instead of cut to their matching lines."}
+	schema := map[string]any{"type": "object", "additionalProperties": false, "required": []string{"query"}, "properties": map[string]any{"query": map[string]any{"type": "string", "minLength": 1, "maxLength": 256}, "scope": map[string]any{"type": "string", "maxLength": 4096}, "limit": map[string]any{"type": "integer", "minimum": 1, "maximum": 50}, "full": full}}
 	for _, name := range []string{"conmesh_search_codebase", "conmesh_find_symbol", "conmesh_find_reference_candidates", "conmesh_index_status"} {
 		input := any(schema)
 		if name == "conmesh_search_codebase" {
-			input = map[string]any{"type": "object", "additionalProperties": false, "required": []string{"query"}, "properties": map[string]any{"query": map[string]any{"type": "string", "minLength": 1, "maxLength": 256}, "scope": map[string]any{"type": "string", "maxLength": 4096}, "limit": map[string]any{"type": "integer", "minimum": 1, "maximum": 50}, "semantic": map[string]any{"type": "boolean"}}}
+			input = map[string]any{"type": "object", "additionalProperties": false, "required": []string{"query"}, "properties": map[string]any{"query": map[string]any{"type": "string", "minLength": 1, "maxLength": 256}, "scope": map[string]any{"type": "string", "maxLength": 4096}, "limit": map[string]any{"type": "integer", "minimum": 1, "maximum": 50}, "full": full, "semantic": map[string]any{"type": "boolean"}}}
 		}
-		description := "Search authorized indexed code; returned files are digest-checked; additions elsewhere may require reindexing."
+		description := "Search authorized indexed code. Each result gives a path, its line range and its code, cut to at most 3 numbered matching lines when long; Read that range for more. Returned files are digest-checked; additions elsewhere may require reindexing."
 		if name == "conmesh_find_symbol" {
 			description = "Find exact indexed symbol names with authorized source evidence."
 		}
@@ -213,6 +219,9 @@ func New(project, version string) (*sdk.Server, error) {
 					if err != nil {
 						return result(response{Error: errorCode(err)}), nil
 					}
+					if !args.Full {
+						v.Evidence = index.Compact(v.Evidence, args.Query)
+					}
 					return result(fit(response{Hybrid: &v, Freshness: "authorized_returned_source_digests_checked_bounded_candidates"})), nil
 				}
 				evidence, err = core.Search(ctx, query)
@@ -223,6 +232,9 @@ func New(project, version string) (*sdk.Server, error) {
 			}
 			if err != nil {
 				return result(response{Error: errorCode(err)}), nil
+			}
+			if !args.Full && name != "conmesh_find_symbol" {
+				evidence = index.Compact(evidence, args.Query)
 			}
 			return result(fit(response{Evidence: evidence, Freshness: "returned_source_digests_checked_not_repository_scan"})), nil
 		})

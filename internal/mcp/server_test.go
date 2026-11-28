@@ -229,9 +229,19 @@ func TestOutputBoundAndErrorSanitization(t *testing.T) {
 	if _, err := core.Index(ctx, nil); err != nil {
 		t.Fatal(err)
 	}
-	v, err := call(ctx, client(t, ctx, dir), "conmesh_search_codebase", map[string]any{"query": "bounded", "limit": 50})
+	session := client(t, ctx, dir)
+	v, err := call(ctx, session, "conmesh_search_codebase", map[string]any{"query": "bounded", "limit": 50, "full": true})
 	if err != nil || !v.Truncated || len(v.Evidence) == 0 {
 		t.Fatal("output was not bounded", v.Truncated, err)
+	}
+	v, err = call(ctx, session, "conmesh_search_codebase", map[string]any{"query": "bounded", "limit": 50})
+	if err != nil || v.Truncated || len(v.Evidence) != 12 {
+		t.Fatal("compact results must all fit", v.Truncated, len(v.Evidence), err)
+	}
+	for _, e := range v.Evidence {
+		if !strings.HasPrefix(e.Snippet, "1: export const bounded") || len(e.Snippet) > index.CompactLineBytes+8 || !e.Truncated {
+			t.Fatal("snippet was not compacted", e.Snippet)
+		}
 	}
 	if code := errorCode(errors.New("password=longSyntheticValue123456")); code != "INDEX_UNAVAILABLE" {
 		t.Fatal("raw diagnostic exposed")
